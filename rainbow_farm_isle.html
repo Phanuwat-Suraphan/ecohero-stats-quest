@@ -149,6 +149,38 @@
   .bigTitle { font-family:'Kanit',sans-serif; font-weight:800; font-size:28px; background:linear-gradient(90deg,#6fce6a,#5fd6ff,#ff9ec4,#ffd166); -webkit-background-clip:text; background-clip:text; color:transparent; letter-spacing:.5px; margin-bottom:6px; }
   .subTitle { color:var(--ink-soft); font-weight:500; font-size:13.5px; margin-bottom:18px; letter-spacing:.2px; }
 
+  /* ---------- Touch joystick (walking) — fixed pad, never covers the canvas/chips ---------- */
+  #joystickBase { position:fixed; bottom:128px; left:18px; width:100px; height:100px; border-radius:50%; background:rgba(255,255,255,.45); border:2.5px solid var(--border); display:none; align-items:center; justify-content:center; z-index:23; touch-action:none; }
+  body.touch-device #joystickBase { display:flex; }
+  #joystickKnob { width:46px; height:46px; border-radius:50%; background:var(--card); border:2.5px solid var(--green); box-shadow:0 4px 0 var(--border); pointer-events:none; transition:transform .05s linear; }
+
+  /* ---------- NPC dialogue ---------- */
+  .npcPortrait { width:56px; height:56px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:28px; margin:0 auto 10px; border:3px solid #fff; box-shadow:0 0 0 2px var(--border); }
+  #dialogueName { text-align:center; font-weight:800; font-size:16px; color:var(--ink); margin-bottom:2px; }
+  #dialogueRole { text-align:center; font-size:11.5px; color:var(--ink-soft); margin-bottom:14px; }
+  #dialogueText { background:#fff; border:2px solid var(--border); border-radius:14px; padding:14px 16px; font-size:14px; color:var(--ink); line-height:1.7; min-height:60px; margin-bottom:12px; }
+  .tierBadge { display:inline-block; font-size:10.5px; font-weight:700; padding:4px 10px; border-radius:20px; background:var(--gold-soft,#fff4e0); color:var(--gold-deep); margin-bottom:10px; }
+  .questBox { background:#eefbef; border:2px dashed var(--green-dark); border-radius:12px; padding:10px 14px; font-size:12.5px; color:var(--ink); margin-bottom:12px; }
+  .questBox.done { background:#fff4e0; border-color:var(--gold-deep); }
+  .dialogueActions { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-bottom:6px; }
+  .dialogueActions .mainBtn { font-size:12.5px; padding:10px 16px; }
+
+  /* ---------- Proximity prompt (talk / pick up) ---------- */
+  #proximityPrompt { position:fixed; left:50%; bottom:250px; transform:translateX(-50%) translateY(10px); display:none; z-index:23; }
+  #proximityPrompt.show { display:block; }
+  #proximityPrompt button { font-family:'Kanit'; font-weight:700; font-size:13.5px; background:linear-gradient(180deg,#ffbc70,var(--orange)); color:#fff; border:none; padding:11px 20px; border-radius:20px; cursor:pointer; box-shadow:0 5px 0 var(--orange-deep); white-space:nowrap; animation:promptPulse 1.6s ease-in-out infinite; }
+  @keyframes promptPulse { 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.05); } }
+
+  /* ---------- Friendship hub ---------- */
+  .friendList { display:flex; flex-direction:column; gap:12px; margin:14px 0; }
+  .friendCard { background:#fff; border:2px solid var(--border); border-radius:14px; padding:12px 16px; }
+  .friendTop { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+  .friendEmoji { width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:19px; border:2.5px solid #fff; box-shadow:0 0 0 2px var(--border); flex:0 0 auto; }
+  .friendName { font-weight:700; font-size:14px; color:var(--ink); }
+  .friendTier { font-size:11px; color:var(--gold-deep); font-weight:700; }
+  .friendBarTrack { height:8px; border-radius:20px; background:#eef2e2; overflow:hidden; border:1.5px solid var(--border); }
+  .friendBarFill { height:100%; background:linear-gradient(90deg,#ffb0d4,var(--pink-dark)); border-radius:20px; transition:width .4s ease; }
+
   @media (max-width:480px){
     #hud { padding:10px 12px; }
     .card { padding:18px 16px; border-radius:22px; }
@@ -176,12 +208,15 @@
   </div>
   <div id="hudRight">
     <button class="iconBtn" id="muteBtnFarm" onclick="toggleMute()" title="เปิด/ปิดเสียง">🔊</button>
+    <button class="iconBtn" onclick="openFriends()" title="ชาวเมือง">👥</button>
     <button class="iconBtn" onclick="openOutfits()" title="แต่งตัวละคร">🧑‍🌾</button>
     <button class="iconBtn" onclick="openShop()" title="ร้านค้า">🛍️</button>
     <button class="iconBtn" onclick="openAchievements()" title="ความสำเร็จ">🏆</button>
   </div>
 </div>
-<div id="hint">👆 ลากเมล็ดจากถาดด้านล่างไปวางบนแปลงว่าง หรือแตะพืชที่โตเต็มที่เพื่อเก็บเกี่ยว</div>
+<div id="hint">🕹️ WASD/ลูกศรเดิน หรือลากจอยสติ๊กบนมือถือ · เดินเข้าใกล้ชาวเกาะเพื่อคุย</div>
+<div id="joystickBase"><div id="joystickKnob"></div></div>
+<div id="proximityPrompt"></div>
 
 <!-- START -->
 <div class="overlay show" id="startScreen">
@@ -268,6 +303,38 @@
   </div>
 </div>
 
+<!-- NPC DIALOGUE -->
+<div class="overlay" id="dialogueScreen">
+  <div class="scrim" onclick="closeDialogue()"></div>
+  <div class="card" style="width:min(460px,92vw); text-align:center;">
+    <div class="npcPortrait" id="dialoguePortrait">🙂</div>
+    <div id="dialogueName">—</div>
+    <div id="dialogueRole">—</div>
+    <div class="tierBadge" id="dialogueTier">คนแปลกหน้า</div>
+    <div class="friendBarTrack" style="margin-bottom:14px;"><div class="friendBarFill" id="dialogueBar" style="width:0%;"></div></div>
+    <div id="dialogueText">—</div>
+    <div class="questBox" id="dialogueQuestBox" style="display:none;"></div>
+    <div class="dialogueActions" id="dialogueActions"></div>
+    <div class="btnRow" style="justify-content:center;">
+      <button class="mainBtn" onclick="closeDialogue()">ลาก่อน</button>
+    </div>
+  </div>
+</div>
+
+<!-- FRIENDSHIP HUB -->
+<div class="overlay" id="friendsScreen">
+  <div class="scrim"></div>
+  <div class="card" style="width:min(480px,92vw);">
+    <div class="eyebrow">Sunmeadow Isle</div>
+    <h1 class="title">👥 ชาวเกาะของคุณ</h1>
+    <p class="body">เดินเข้าไปคุยกับชาวเกาะบ่อย ๆ ช่วยเหลือ และให้ของขวัญที่พวกเขาชอบ เพื่อกระชับมิตรภาพให้แน่นแฟ้นขึ้น</p>
+    <div class="friendList" id="friendList"></div>
+    <div class="btnRow" style="justify-content:center;">
+      <button class="mainBtn" onclick="hide('friendsScreen')">ปิด</button>
+    </div>
+  </div>
+</div>
+
 <!-- FARM SCENE (docked HUD over the 3D island, not a modal) -->
 <div class="overlay" id="farmScreen">
   <div id="farmToastWrap"></div>
@@ -284,8 +351,53 @@
 <script>
 /* ============================= STATE ============================= */
 const state = {
-  gameStarted:false, domeZoom: 38, domeZoomMin: 20, domeZoomMax: 62, selectedSeedType:null
+  gameStarted:false, domeZoom: 38, domeZoomMin: 20, domeZoomMax: 62, selectedSeedType:null,
+  keys:{}, playerAngle:0, joyDX:0, joyDY:0, activeNpcId:null
 };
+let isTouchDevice = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+
+/* ============================= WALKING INPUT =============================
+   WASD/arrow keys on desktop. On touch, a small FIXED-position joystick pad
+   (not a full-screen drag layer) so it never steals taps meant for the seed
+   tray, plot tap-to-harvest, or pinch-zoom, which all still live on the
+   canvas/chips exactly as before. */
+window.addEventListener('keydown', e=>{ state.keys[e.key.toLowerCase()]=true; });
+window.addEventListener('keyup', e=>{ state.keys[e.key.toLowerCase()]=false; });
+
+const JOY_MAX_RADIUS = 42;
+const JOY_DEADZONE = 8;
+let joyActive = false, joyOriginX = 0, joyOriginY = 0;
+function resetJoyKeys(){ state.joyDX = 0; state.joyDY = 0; }
+function updateJoyKeys(dx, dy){
+  if(Math.hypot(dx,dy) < JOY_DEADZONE){ resetJoyKeys(); return; }
+  state.joyDX = Math.max(-1, Math.min(1, dx / JOY_MAX_RADIUS));
+  state.joyDY = Math.max(-1, Math.min(1, dy / JOY_MAX_RADIUS));
+}
+function joyShouldActivate(){ return state.gameStarted && !dialogueOpen(); }
+function initJoystick(){
+  const base = document.getElementById('joystickBase');
+  const knob = document.getElementById('joystickKnob');
+  const start = (clientX, clientY)=>{
+    if(!joyShouldActivate()) return;
+    joyActive = true; joyOriginX = clientX; joyOriginY = clientY;
+  };
+  const move = (clientX, clientY)=>{
+    if(!joyActive) return;
+    let dx = clientX - joyOriginX, dy = clientY - joyOriginY;
+    const dist = Math.hypot(dx,dy);
+    if(dist > JOY_MAX_RADIUS){ dx = dx/dist*JOY_MAX_RADIUS; dy = dy/dist*JOY_MAX_RADIUS; }
+    knob.style.transform = `translate(${dx}px, ${dy}px)`;
+    updateJoyKeys(dx, dy);
+  };
+  const end = ()=>{ joyActive = false; resetJoyKeys(); knob.style.transform = 'translate(0,0)'; };
+  base.addEventListener('touchstart', e=>{ e.preventDefault(); const t=e.changedTouches[0]; start(t.clientX,t.clientY); }, {passive:false});
+  base.addEventListener('touchmove', e=>{ e.preventDefault(); const t=e.changedTouches[0]; move(t.clientX,t.clientY); }, {passive:false});
+  base.addEventListener('touchend', end);
+  base.addEventListener('touchcancel', end);
+  base.addEventListener('mousedown', e=>{ start(e.clientX,e.clientY); });
+  window.addEventListener('mousemove', e=>{ if(joyActive) move(e.clientX,e.clientY); });
+  window.addEventListener('mouseup', end);
+}
 
 /* ============================= SOUND SYSTEM =============================
    Fully procedural (Web Audio oscillators) — no external audio files, so it
@@ -326,6 +438,8 @@ const SFX = (function(){
     levelup(){ chord([523.25,659.25,783.99,1046.5], {duration:0.3, type:'triangle', gain:0.17}); },
     unlock(){ chord([659.25,987.77,1318.5], {duration:0.28, type:'sine', gain:0.15}); },
     bad(){ beep({freq:220, slideTo:140, duration:0.2, type:'sawtooth', gain:0.13}); },
+    pickup(){ beep({freq:660, slideTo:1100, duration:0.2, type:'sine', gain:0.16}); },
+    talk(){ beep({freq:480, duration:0.06, type:'sine', gain:0.08}); },
     isMuted(){ return muted; },
     setMuted(v){ muted = v; localStorage.setItem('rfi_muted', v ? '1' : '0'); }
   };
@@ -413,7 +527,10 @@ const ACHIEVEMENTS = [
   { id:'first_outfit', name:'แต่งตัวสวย', desc:'ซื้อชุดหรือหมวกชิ้นแรก', icon:'👗' },
   { id:'streak3', name:'ขาประจำ 3 วัน', desc:'เข้าเล่นติดต่อกัน 3 วัน', icon:'🔥' },
   { id:'streak7', name:'ขาประจำ 7 วัน', desc:'เข้าเล่นติดต่อกัน 7 วัน', icon:'🔥' },
-  { id:'streak14', name:'ขาประจำ 14 วัน', desc:'เข้าเล่นติดต่อกัน 14 วัน', icon:'🔥' }
+  { id:'streak14', name:'ขาประจำ 14 วัน', desc:'เข้าเล่นติดต่อกัน 14 วัน', icon:'🔥' },
+  { id:'first_friend', name:'เพื่อนคนแรก', desc:'มีความสัมพันธ์ระดับ "เพื่อน" กับชาวเกาะคนใดคนหนึ่ง', icon:'🤝' },
+  { id:'family_tier', name:'ครอบครัวหมู่บ้าน', desc:'มีความสัมพันธ์ระดับสูงสุดกับชาวเกาะคนใดคนหนึ่ง', icon:'🏡' },
+  { id:'first_secret', name:'นักสำรวจตัวจริง', desc:'ค้นพบความลับแรกของเกาะ', icon:'✨' }
 ];
 function getUnlockedAchievements(){
   try{ const l = JSON.parse(localStorage.getItem('rfi_achievements')); return Array.isArray(l) ? l : []; } catch(e){ return []; }
@@ -492,6 +609,7 @@ function getOwnedOutfits(){
   return { owned:['none','default'], equippedHat:'none', equippedClothes:'default' };
 }
 function saveOutfits(o){ localStorage.setItem('rfi_outfits', JSON.stringify(o)); }
+function hexToCss(hex){ return '#' + hex.toString(16).padStart(6,'0'); }
 function switchOutfitTab(tab){
   outfitTab = tab;
   document.getElementById('tabHat').classList.toggle('active', tab==='hat');
@@ -1071,6 +1189,325 @@ function applyOutfits(){
 }
 applyOutfits();
 
+/* ============================= FRIENDSHIP SYSTEM ============================= */
+const FRIEND_TIERS = [
+  { id:'stranger', name:'คนแปลกหน้า', min:0 },
+  { id:'acquaintance', name:'คนรู้จัก', min:10 },
+  { id:'friend', name:'เพื่อน', min:30 },
+  { id:'close', name:'เพื่อนสนิท', min:60 },
+  { id:'helper', name:'ผู้ช่วย', min:100 },
+  { id:'family', name:'ครอบครัวหมู่บ้าน', min:150 }
+];
+function tierForPoints(pts){
+  let cur = FRIEND_TIERS[0];
+  for(const t of FRIEND_TIERS){ if(pts >= t.min) cur = t; }
+  return cur;
+}
+function tierIndex(id){ return FRIEND_TIERS.findIndex(t=>t.id===id); }
+function getFriendData(){
+  try{ const raw = JSON.parse(localStorage.getItem('rfi_friends')); if(raw && typeof raw === 'object') return raw; } catch(e){}
+  return {};
+}
+function saveFriendData(d){ localStorage.setItem('rfi_friends', JSON.stringify(d)); }
+function getNpcFriend(npcId){
+  const d = getFriendData();
+  return d[npcId] || { points:0, talked:false, questDone:false, giftsGiven:0 };
+}
+function checkTierUnlockAchievements(beforeId, afterId){
+  if(beforeId === afterId) return;
+  const afterIdx = tierIndex(afterId);
+  if(afterIdx >= tierIndex('friend')) unlockAchievement('first_friend');
+  if(afterIdx >= tierIndex('family')) unlockAchievement('family_tier');
+}
+
+/* ============================= WORLD FLAGS (quest items / secrets) ============================= */
+function getWorldFlags(){
+  try{ const raw = JSON.parse(localStorage.getItem('rfi_world_flags')); if(raw) return raw; } catch(e){}
+  return {};
+}
+function saveWorldFlags(f){ localStorage.setItem('rfi_world_flags', JSON.stringify(f)); }
+function isFlagSet(key){ return !!getWorldFlags()[key]; }
+function setFlag(key){ const f = getWorldFlags(); f[key] = true; saveWorldFlags(f); }
+
+/* ============================= NPCS ============================= */
+const NPC_DEFS = [
+  { id:'panwan', name:'ป้าหวาน', role:'แม่หมู่บ้าน', emoji:'👩‍🍳', bodyColor:0xffab52, headColor:0xfff2df, x:11, z:-22,
+    lines:{
+      stranger:'สวัสดีจ้ะ! ไม่เคยเห็นหน้ามาก่อนเลยนะ มาเที่ยวเกาะเหรอ?',
+      acquaintance:'วันนี้ขนมเพิ่งออกจากเตาเลยนะ อยากชิมไหม?',
+      friend:'เธอกลับมาอีกแล้ว! ป้าดีใจจังเลยจ้ะ',
+      close:'ป้าถือว่าเธอเป็นเหมือนครอบครัวคนหนึ่งแล้วนะ',
+      helper:'มีเธอช่วยเหลือแบบนี้ ป้าอุ่นใจขึ้นเยอะเลยจ้ะ',
+      family:'เกาะนี้อบอุ่นขึ้นเพราะมีเธอนะ ขอบคุณจริง ๆ จ้ะ'
+    },
+    gift:{ name:'ดอกลาเวนเดอร์', icon:'💜', cost:20 },
+    quest:{ id:'balloon', title:'ลูกโป่งของหลานสาว',
+      ask:'ลูกโป่งเทศกาลของหลานสาวป้าลอยติดกิ่งไม้สูงอยู่แถวสวนน่ะจ้ะ ช่วยตามหาให้หน่อยได้ไหม?',
+      remind:'ลูกโป่งของหลานสาวยังหาไม่เจอเลยจ้ะ ลองเดินสำรวจดูใกล้ ๆ ต้นไม้สิ',
+      complete:'เจอแล้วจริง ๆ ด้วย! ขอบคุณนะจ๊ะ หลานสาวจะดีใจมากเลย 🎈',
+      done:'หลานสาวยังพูดถึงลูกโป่งใบนั้นอยู่เลยนะ ขอบคุณอีกครั้งจ้ะ',
+      itemFlag:'balloonFound', reward:{coins:40, xp:15} }
+  },
+  { id:'yaibua', name:'คุณยายบัว', role:'คนสวนดอกไม้', emoji:'👵', bodyColor:0x8fe07a, headColor:0xfff2df, x:-19, z:17,
+    lines:{
+      stranger:'อ้าว มีคนมาเยี่ยมสวนยายด้วยเหรอจ๊ะ',
+      acquaintance:'ดอกไม้พวกนี้ยายปลูกเองกับมือเลยนะ',
+      friend:'มาเยี่ยมสวนยายอีกแล้วเหรอ ยายดีใจนะ',
+      close:'หลาน ๆ ของยายก็น่ารักแบบเธอนี่แหละ',
+      helper:'ยายไว้ใจเธอเรื่องสวนได้เต็มที่เลยนะ',
+      family:'สวนนี้สวยขึ้นเพราะมีเธอมาเยี่ยมบ่อย ๆ จ้ะ'
+    },
+    gift:{ name:'เมล็ดพันธุ์แปลก', icon:'🌰', cost:20 },
+    quest:{ id:'glasses', title:'แว่นสายตาที่หายไป',
+      ask:'แว่นสายตาของยายหายไปในสวนตั้งแต่ฤดูก่อนเลยจ้ะ ช่วยหาให้หน่อยได้ไหม?',
+      remind:'แว่นของยายยังไม่เจอเลยจ้ะ อยู่แถวพุ่มไม้ในสวนแหละ',
+      complete:'เจอแล้ว! ตาดีจริง ๆ นะจ๊ะ ขอบคุณมากเลย',
+      done:'ตอนนี้ยายมองเห็นดอกไม้ชัดเจนขึ้นเยอะเลย ต้องขอบคุณเธอนะ',
+      itemFlag:'glassesFound', reward:{coins:40, xp:15} }
+  },
+  { id:'lungtai', name:'ลุงไถ', role:'หัวหน้าหมู่บ้าน', emoji:'👨‍🌾', bodyColor:0xffd166, headColor:0xfff8ea, x:1, z:-16,
+    lines:{
+      stranger:'สวัสดี! ยินดีต้อนรับสู่เกาะของเรานะ',
+      acquaintance:'เป็นยังไงบ้าง คุ้นเคยกับเกาะแล้วหรือยัง?',
+      friend:'เจ้าตัวน้อย! วันนี้เกาะดูมีชีวิตชีวาขึ้นเพราะเธอเลยนะ',
+      close:'ลุงภูมิใจในตัวเธอมากเลยนะ',
+      helper:'เกาะนี้โชคดีที่มีเธอมาช่วยดูแลจริง ๆ',
+      family:'เธอคือส่วนหนึ่งของหมู่บ้านนี้แล้วนะ'
+    },
+    gift:{ name:'ผลไม้แปลกใหม่', icon:'🍉', cost:20 },
+    quest:{ id:'harvest_all', title:'เทศกาลต้อนรับนักสำรวจ',
+      ask:'ลุงอยากจัด "เทศกาลต้อนรับนักสำรวจ" น่ะ ช่วยปลดล็อกเมล็ดพันธุ์ให้ครบทุกชนิดในร้านค้าหน่อยได้ไหม?',
+      remind:'ยังปลดล็อกเมล็ดพันธุ์ไม่ครบเลยนะ ลองแวะร้านค้าดูสิ',
+      complete:'ครบทุกชนิดแล้ว! เทศกาลปีนี้ต้องยิ่งใหญ่แน่ ๆ ขอบคุณนะ',
+      done:'เทศกาลต้อนรับนักสำรวจปีนี้สนุกเพราะเธอเลยนะ',
+      checkFn:'allSeedsUnlocked', reward:{coins:60, xp:25} }
+  }
+];
+function isQuestReady(def){
+  const q = def.quest;
+  if(getNpcFriend(def.id).questDone) return false;
+  if(q.itemFlag) return isFlagSet(q.itemFlag);
+  if(q.checkFn === 'allSeedsUnlocked') return CROP_TYPES.every(c=>farmState.unlockedSeeds.includes(c.id));
+  return false;
+}
+const npcMeshes = {};
+function buildNpcMesh(def){
+  const g = new THREE.Group();
+  const bMat = new THREE.MeshStandardMaterial({color:def.bodyColor, roughness:0.6});
+  const b = new THREE.Mesh(new THREE.BoxGeometry(1.3,1.3,0.9), bMat);
+  b.position.y = 0.95;
+  const hMat = new THREE.MeshStandardMaterial({color:def.headColor, roughness:0.6});
+  const h = new THREE.Mesh(new THREE.BoxGeometry(1.1,1.0,1.05), hMat);
+  h.position.y = 2.05;
+  const legMat = new THREE.MeshStandardMaterial({color:0x6b5738, roughness:0.7});
+  const legL = new THREE.Mesh(new THREE.BoxGeometry(0.35,0.5,0.38), legMat); legL.position.set(-0.35,0.25,0);
+  const legR = new THREE.Mesh(new THREE.BoxGeometry(0.35,0.5,0.38), legMat); legR.position.set(0.35,0.25,0);
+  g.add(addOutline(b,1.12), addOutline(h,1.1), addOutline(legL,1.15), addOutline(legR,1.15));
+  g.add(b, h, legL, legR);
+  addCuteFace(g, 0, 2.1, 0.56, 0.85, 0.3);
+  g.position.set(def.x, 0, def.z);
+  g.userData.idlePhase = Math.random()*Math.PI*2;
+  islandGroup.add(g);
+  return g;
+}
+NPC_DEFS.forEach(def=>{ npcMeshes[def.id] = buildNpcMesh(def); });
+
+/* ============================= SECRETS: WORLD ITEMS ============================= */
+const worldItemDefs = [
+  { id:'balloon', emoji:'🎈', x:-25, z:-16, color:0xff9ec4, flagKey:'balloonFound' },
+  { id:'glasses', emoji:'👓', x:-16, z:21, color:0x6fb8e0, flagKey:'glassesFound' },
+  { id:'chest', emoji:'🎁', x:22, z:18, color:0xffd166, flagKey:'chestFound', secret:true, coins:80, xp:20 }
+];
+const worldItemMeshes = {};
+function buildWorldItem(def){
+  const g = new THREE.Group();
+  const glow = new THREE.PointLight(def.color, 1.1, 6);
+  glow.position.y = 1.6;
+  const core = new THREE.Mesh(new THREE.SphereGeometry(0.32,10,8), new THREE.MeshStandardMaterial({color:def.color, emissive:def.color, emissiveIntensity:0.45, roughness:0.4}));
+  core.position.y = 1.6;
+  g.add(glow, core);
+  g.position.set(def.x, 0, def.z);
+  g.userData.bobPhase = Math.random()*Math.PI*2;
+  islandGroup.add(g);
+  return g;
+}
+worldItemDefs.forEach(def=>{ worldItemMeshes[def.id] = buildWorldItem(def); });
+function refreshWorldItemVisibility(){
+  worldItemDefs.forEach(def=>{
+    const mesh = worldItemMeshes[def.id];
+    if(mesh) mesh.visible = !isFlagSet(def.flagKey);
+  });
+}
+function collectWorldItem(id){
+  const def = worldItemDefs.find(w=>w.id===id);
+  if(!def || isFlagSet(def.flagKey)) return;
+  setFlag(def.flagKey);
+  const mesh = worldItemMeshes[id];
+  if(mesh) mesh.visible = false;
+  SFX.pickup();
+  if(def.coins) addCoins(def.coins);
+  if(def.xp) addXp(def.xp);
+  if(def.secret){
+    unlockAchievement('first_secret');
+    toastFarm(`✨ พบความลับ! ${def.emoji} (+${def.coins} เหรียญ)`, 'ok');
+  } else {
+    const owner = NPC_DEFS.find(n=>n.quest && n.quest.itemFlag===def.flagKey);
+    toastFarm(`${def.emoji} เก็บของได้แล้ว! กลับไปคุยกับ${owner ? owner.name : 'เจ้าของ'}สิ`, 'ok');
+  }
+  saveFarmState(); renderHud();
+  nearbyTarget = null; renderProximityPrompt();
+}
+
+/* ============================= PROXIMITY / DIALOGUE ============================= */
+const PROXIMITY_RADIUS = 4.4;
+let nearbyTarget = null;
+function checkProximity(){
+  let best = null, bestDist = PROXIMITY_RADIUS;
+  NPC_DEFS.forEach(def=>{
+    const d = Math.hypot(player.position.x-def.x, player.position.z-def.z);
+    if(d < bestDist){ bestDist = d; best = {type:'npc', id:def.id}; }
+  });
+  worldItemDefs.forEach(def=>{
+    if(isFlagSet(def.flagKey)) return;
+    const d = Math.hypot(player.position.x-def.x, player.position.z-def.z);
+    if(d < bestDist){ bestDist = d; best = {type:'item', id:def.id}; }
+  });
+  const changed = JSON.stringify(best) !== JSON.stringify(nearbyTarget);
+  nearbyTarget = best;
+  if(changed) renderProximityPrompt();
+}
+function renderProximityPrompt(){
+  const el = document.getElementById('proximityPrompt');
+  if(!nearbyTarget){ el.classList.remove('show'); el.innerHTML = ''; return; }
+  if(nearbyTarget.type === 'npc'){
+    const def = NPC_DEFS.find(n=>n.id===nearbyTarget.id);
+    el.innerHTML = `<button onclick="openDialogue('${def.id}')">💬 คุยกับ${def.name}</button>`;
+  } else {
+    const def = worldItemDefs.find(w=>w.id===nearbyTarget.id);
+    el.innerHTML = `<button onclick="collectWorldItem('${def.id}')">${def.emoji} เก็บ</button>`;
+  }
+  el.classList.add('show');
+}
+let currentDialogueNpc = null;
+function openDialogue(npcId){
+  currentDialogueNpc = npcId;
+  const def = NPC_DEFS.find(n=>n.id===npcId);
+  const d = getFriendData();
+  const cur = d[npcId] || { points:0, talked:false, questDone:false, giftsGiven:0 };
+  const beforeTierId = tierForPoints(cur.points).id;
+  cur.points += 2; cur.talked = true;
+  d[npcId] = cur;
+  saveFriendData(d);
+  checkTierUnlockAchievements(beforeTierId, tierForPoints(cur.points).id);
+  SFX.talk();
+  document.getElementById('dialoguePortrait').textContent = def.emoji;
+  document.getElementById('dialoguePortrait').style.background = hexToCss(def.bodyColor);
+  document.getElementById('dialogueName').textContent = def.name;
+  document.getElementById('dialogueRole').textContent = def.role;
+  renderDialogueBody();
+  show('dialogueScreen');
+  nearbyTarget = null; renderProximityPrompt();
+}
+function renderDialogueBody(){
+  const def = NPC_DEFS.find(n=>n.id===currentDialogueNpc);
+  const friend = getNpcFriend(currentDialogueNpc);
+  const tier = tierForPoints(friend.points);
+  document.getElementById('dialogueTier').textContent = tier.name;
+  const nextTier = FRIEND_TIERS[tierIndex(tier.id)+1];
+  const pct = nextTier ? Math.min(100, (friend.points-tier.min)/(nextTier.min-tier.min)*100) : 100;
+  document.getElementById('dialogueBar').style.width = pct + '%';
+  document.getElementById('dialogueText').textContent = def.lines[tier.id] || def.lines.stranger;
+
+  const q = def.quest;
+  const questBox = document.getElementById('dialogueQuestBox');
+  questBox.style.display = 'block';
+  if(friend.questDone){
+    questBox.className = 'questBox done';
+    questBox.textContent = '✔ ' + q.done;
+  } else {
+    questBox.className = 'questBox';
+    questBox.textContent = friend.talked ? q.remind : q.ask;
+  }
+
+  const actions = document.getElementById('dialogueActions');
+  actions.innerHTML = '';
+  if(!friend.questDone && isQuestReady(def)){
+    const btn = document.createElement('button');
+    btn.className = 'mainBtn';
+    btn.textContent = '✔ ส่งมอบภารกิจ';
+    btn.onclick = ()=>completeQuest(def.id);
+    actions.appendChild(btn);
+  }
+  const giftBtn = document.createElement('button');
+  giftBtn.className = 'mainBtn orange';
+  giftBtn.textContent = `${def.gift.icon} ให้ของขวัญ (🪙${def.gift.cost})`;
+  giftBtn.disabled = farmState.coins < def.gift.cost;
+  giftBtn.onclick = ()=>giveGift(def.id);
+  actions.appendChild(giftBtn);
+}
+function completeQuest(npcId){
+  const def = NPC_DEFS.find(n=>n.id===npcId);
+  const d = getFriendData();
+  const cur = d[npcId] || { points:0, talked:true, questDone:false, giftsGiven:0 };
+  if(cur.questDone) return;
+  const beforeTierId = tierForPoints(cur.points).id;
+  cur.questDone = true;
+  cur.points += 40;
+  d[npcId] = cur;
+  saveFriendData(d);
+  addCoins(def.quest.reward.coins);
+  addXp(def.quest.reward.xp);
+  SFX.unlock();
+  toastFarm(`✔ ${def.quest.title} สำเร็จ! 🪙+${def.quest.reward.coins}`, 'ok');
+  checkTierUnlockAchievements(beforeTierId, tierForPoints(cur.points).id);
+  saveFarmState(); renderHud();
+  if(currentDialogueNpc === npcId) renderDialogueBody();
+}
+function giveGift(npcId){
+  const def = NPC_DEFS.find(n=>n.id===npcId);
+  if(farmState.coins < def.gift.cost){ toastFarm('เหรียญไม่พอ', 'bad'); SFX.bad(); return; }
+  farmState.coins -= def.gift.cost;
+  const d = getFriendData();
+  const cur = d[npcId] || { points:0, talked:true, questDone:false, giftsGiven:0 };
+  const beforeTierId = tierForPoints(cur.points).id;
+  cur.points += 25;
+  cur.giftsGiven = (cur.giftsGiven||0) + 1;
+  d[npcId] = cur;
+  saveFriendData(d);
+  SFX.equip();
+  toastFarm(`${def.gift.icon} มอบ ${def.gift.name} ให้ ${def.name} แล้ว!`, 'ok');
+  checkTierUnlockAchievements(beforeTierId, tierForPoints(cur.points).id);
+  saveFarmState(); renderHud();
+  if(currentDialogueNpc === npcId) renderDialogueBody();
+}
+function closeDialogue(){ hide('dialogueScreen'); currentDialogueNpc = null; }
+
+/* ============================= FRIENDSHIP HUB ============================= */
+function openFriends(){ SFX.click(); renderFriendList(); show('friendsScreen'); }
+function renderFriendList(){
+  const wrap = document.getElementById('friendList');
+  wrap.innerHTML = '';
+  NPC_DEFS.forEach(def=>{
+    const friend = getNpcFriend(def.id);
+    const tier = tierForPoints(friend.points);
+    const nextTier = FRIEND_TIERS[tierIndex(tier.id)+1];
+    const pct = nextTier ? Math.min(100, (friend.points-tier.min)/(nextTier.min-tier.min)*100) : 100;
+    const card = document.createElement('div');
+    card.className = 'friendCard';
+    card.innerHTML = `
+      <div class="friendTop">
+        <div class="friendEmoji" style="background:${hexToCss(def.bodyColor)};">${def.emoji}</div>
+        <div style="flex:1;">
+          <div class="friendName">${def.name}</div>
+          <div class="friendTier">${tier.name}${nextTier ? ` · อีก ${nextTier.min-friend.points} คะแนนถึง ${nextTier.name}` : ' · ระดับสูงสุดแล้ว'}</div>
+        </div>
+      </div>
+      <div class="friendBarTrack"><div class="friendBarFill" style="width:${pct}%;"></div></div>
+    `;
+    wrap.appendChild(card);
+  });
+}
+
 /* ============================= FARM PLOTS ============================= */
 const plots = []; // {mesh, x, z, tier, cropId, plantedAt, cropMesh}
 function makePlotRing(radius, count, angleOffset, tier){
@@ -1371,11 +1808,40 @@ function toastFarm(msg, cls){
 /* ============================= CAMERA / ZOOM ============================= */
 function updateCamera(){
   const heightRatio = 46/38, distRatio = 38/38;
-  const camTarget = new THREE.Vector3(ISLAND_CENTER.x, state.domeZoom*heightRatio, ISLAND_CENTER.z + state.domeZoom*distRatio);
+  const followX = state.gameStarted ? player.position.x : ISLAND_CENTER.x;
+  const followZ = state.gameStarted ? player.position.z : ISLAND_CENTER.z;
+  const camTarget = new THREE.Vector3(followX, state.domeZoom*heightRatio, followZ + state.domeZoom*distRatio);
   camera.position.lerp(camTarget, 0.09);
   const lookAt = camera.userData.lookAt || (camera.userData.lookAt = new THREE.Vector3());
-  lookAt.lerp(new THREE.Vector3(ISLAND_CENTER.x, 2, ISLAND_CENTER.z), 0.08);
+  lookAt.lerp(new THREE.Vector3(followX, 2, followZ), 0.08);
   camera.lookAt(lookAt);
+}
+
+/* ============================= WALKING / PROXIMITY ============================= */
+const MOVE_SPEED = 0.16;
+const ISLAND_WALK_RADIUS = 31.5;
+function dialogueOpen(){ return document.getElementById('dialogueScreen').classList.contains('show'); }
+function handleMovement(){
+  if(!state.gameStarted || dialogueOpen()) return;
+  let mx = 0, mz = 0;
+  if(state.keys['w']||state.keys['arrowup']) mz -= 1;
+  if(state.keys['s']||state.keys['arrowdown']) mz += 1;
+  if(state.keys['a']||state.keys['arrowleft']) mx -= 1;
+  if(state.keys['d']||state.keys['arrowright']) mx += 1;
+  mx += state.joyDX;
+  mz += state.joyDY;
+  const mag = Math.hypot(mx, mz);
+  if(mag < 0.05) return;
+  const nx = mx/Math.max(1,mag), nz = mz/Math.max(1,mag);
+  const speed = MOVE_SPEED * Math.min(1,mag);
+  player.position.x += nx * speed;
+  player.position.z += nz * speed;
+  player.rotation.y = Math.atan2(nx, nz);
+  const r = Math.hypot(player.position.x, player.position.z);
+  if(r > ISLAND_WALK_RADIUS){
+    const s = ISLAND_WALK_RADIUS / r;
+    player.position.x *= s; player.position.z *= s;
+  }
 }
 function adjustFarmZoom(delta){
   state.domeZoom = Math.min(state.domeZoomMax, Math.max(state.domeZoomMin, state.domeZoom + delta));
@@ -1423,6 +1889,9 @@ function enterFarm(){
       }
     });
   }
+  refreshWorldItemVisibility();
+  nearbyTarget = null;
+  renderProximityPrompt();
   renderHud();
   renderSeedTray();
   show('farmScreen');
@@ -1432,8 +1901,15 @@ function enterFarm(){
 /* ============================= ANIMATE ============================= */
 function animate(){
   requestAnimationFrame(animate);
+  handleMovement();
   updateCamera();
   const now = Date.now();
+
+  // periodic re-check of nearby NPCs/interactables so the prompt button shows without a tap
+  if(now - (animate._lastProximityCheck||0) > 200){
+    animate._lastProximityCheck = now;
+    if(state.gameStarted && !dialogueOpen()) checkProximity();
+  }
 
   // periodic re-check of plot growth stages so crops visually mature without needing a tap
   if(now - (animate._lastGrowthCheck||0) > 1000){
@@ -1500,6 +1976,24 @@ function animate(){
     if(leaf) leaf.rotation.z = Math.sin(now*0.0012 + t.userData.swayPhase)*0.08;
   });
 
+  // NPC idle bob + gentle turn toward the player when nearby (feels alive without full animation rigging)
+  NPC_DEFS.forEach(def=>{
+    const g = npcMeshes[def.id];
+    if(!g) return;
+    const phase = g.userData.idlePhase || 0;
+    g.position.y = Math.sin(now*0.0018 + phase) * 0.05;
+    const dx = player.position.x - def.x, dz = player.position.z - def.z;
+    if(Math.hypot(dx,dz) < 9){ g.rotation.y = Math.atan2(dx, dz); }
+  });
+  // secret/quest item bob + spin
+  worldItemDefs.forEach(def=>{
+    const g = worldItemMeshes[def.id];
+    if(!g || !g.visible) return;
+    const phase = g.userData.bobPhase || 0;
+    g.children[1].position.y = 1.6 + Math.sin(now*0.003 + phase) * 0.15;
+    g.children[1].rotation.y = now*0.0015 + phase;
+  });
+
   renderer.render(scene, camera);
 }
 animate();
@@ -1512,6 +2006,8 @@ window.addEventListener('resize', ()=>{
 
 /* ============================= BOOT ============================= */
 (function boot(){
+  if(isTouchDevice) document.body.classList.add('touch-device');
+  initJoystick();
   updateMuteButtons();
   const streakData = computeStreakOnLoad();
   checkStreakAchievements(streakData);
