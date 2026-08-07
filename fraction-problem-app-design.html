@@ -1,0 +1,449 @@
+<title>แอปฝึกโจทย์เศษส่วน — เอกสารออกแบบระบบ</title>
+<meta name="description" content="ข้อเสนอสถาปัตยกรรมสำหรับแอปสร้างและแก้โจทย์เศษส่วนแบบ step-by-step พร้อมภาพประกอบ" />
+<style>
+  :root{
+    --paper:#eef1ee; --paper-raised:#ffffff; --ink:#1c2420; --ink-soft:#5e6b62;
+    --line:rgba(28,36,32,.14); --line-strong:rgba(28,36,32,.28);
+    --accent:#256b56; --accent-soft:#dcebe4; --accent-ink:#184d3d;
+    --warm:#b56a26; --warm-soft:#f3e3d0;
+    --shadow:0 1px 0 rgba(28,36,32,.06);
+    --code-bg:#f4f6f3; --code-key:#3c4a43; --code-str:#256b56; --code-num:#b56a26;
+    --maxw:740px; --maxw-wide:1080px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#141a17; --paper-raised:#1c2420; --ink:#e7ece8; --ink-soft:#9fada4;
+      --line:rgba(231,236,232,.14); --line-strong:rgba(231,236,232,.26);
+      --accent:#5fbf9d; --accent-soft:#1f3730; --accent-ink:#a8e6cd;
+      --warm:#e0a262; --warm-soft:#3a2c1c;
+      --shadow:0 1px 0 rgba(0,0,0,.3);
+      --code-bg:#1a211d; --code-key:#c7d0cb; --code-str:#7fd6b6; --code-num:#e0a262;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#141a17; --paper-raised:#1c2420; --ink:#e7ece8; --ink-soft:#9fada4;
+    --line:rgba(231,236,232,.14); --line-strong:rgba(231,236,232,.26);
+    --accent:#5fbf9d; --accent-soft:#1f3730; --accent-ink:#a8e6cd;
+    --warm:#e0a262; --warm-soft:#3a2c1c;
+    --shadow:0 1px 0 rgba(0,0,0,.3);
+    --code-bg:#1a211d; --code-key:#c7d0cb; --code-str:#7fd6b6; --code-num:#e0a262;
+  }
+  *{ box-sizing:border-box; }
+  html{ text-size-adjust:100%; }
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:-apple-system,"Segoe UI","Noto Sans Thai","Sarabun","Leelawadee UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    line-height:1.7; font-size:16px;
+  }
+  ::selection{ background:var(--accent-soft); color:var(--ink); }
+  h1,h2,h3,h4{ text-wrap:balance; font-weight:800; letter-spacing:.1px; margin:0 0 .5em; color:var(--ink); }
+  p{ margin:0 0 1em; max-width:65ch; }
+  a{ color:var(--accent-ink); }
+  code, .mono{ font-family:ui-monospace,"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace; font-variant-numeric:tabular-nums; }
+  .eyebrow{ font-size:11.5px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--accent-ink); display:block; margin-bottom:8px; }
+
+  #topnav{ position:sticky; top:0; z-index:40; background:color-mix(in srgb, var(--paper) 90%, transparent); backdrop-filter:blur(6px); border-bottom:1px solid var(--line); }
+  #topnav .inner{ max-width:var(--maxw-wide); margin:0 auto; padding:10px 24px; display:flex; align-items:center; gap:4px; overflow-x:auto; scrollbar-width:none; }
+  #topnav .inner::-webkit-scrollbar{ display:none; }
+  #topnav a{ flex:0 0 auto; font-size:12.5px; font-weight:600; color:var(--ink-soft); text-decoration:none; padding:7px 11px; border-radius:20px; white-space:nowrap; }
+  #topnav a:hover, #topnav a:focus-visible{ color:var(--ink); background:var(--paper-raised); }
+  #topnav .brand{ font-weight:800; color:var(--ink); font-size:13.5px; letter-spacing:.2px; padding-right:12px; border-right:1px solid var(--line); margin-right:6px; flex:0 0 auto; }
+
+  main{ max-width:var(--maxw-wide); margin:0 auto; padding:0 24px 120px; }
+  .prose{ max-width:var(--maxw); }
+  section{ padding:60px 0; border-bottom:1px solid var(--line); }
+  section:last-of-type{ border-bottom:none; }
+  h2.sectionTitle{ font-size:clamp(24px,3.4vw,30px); margin-bottom:6px; }
+  .sectionLede{ color:var(--ink-soft); font-size:15px; max-width:60ch; margin-bottom:2.2em; }
+
+  #hero{ padding:52px 0 44px; }
+  #hero .kicker{ display:flex; align-items:center; gap:10px; margin-bottom:16px; }
+  #hero .kicker .dot{ width:7px; height:7px; border-radius:50%; background:var(--accent); }
+  #hero .kicker span{ font-size:11.5px; font-weight:700; letter-spacing:1.6px; text-transform:uppercase; color:var(--ink-soft); }
+  #hero h1{ font-size:clamp(30px,5vw,44px); line-height:1.12; margin-bottom:12px; }
+  #hero h1 em{ font-style:normal; color:var(--accent-ink); }
+  #hero .sub{ font-size:16px; color:var(--ink-soft); max-width:62ch; margin-bottom:26px; }
+  #hero .meta{ display:flex; gap:24px; flex-wrap:wrap; font-size:12.5px; color:var(--ink-soft); border-top:1px solid var(--line); padding-top:16px; }
+  #hero .meta b{ color:var(--ink); display:block; font-size:16px; font-weight:800; }
+
+  blockquote{ margin:0; padding:0 0 0 18px; border-left:3px solid var(--accent); font-size:18px; line-height:1.6; color:var(--ink); max-width:56ch; }
+
+  .checkGrid{ display:grid; grid-template-columns:1fr 1fr; gap:8px 28px; margin:8px 0 0; padding:0; list-style:none; max-width:820px; }
+  @media (max-width:700px){ .checkGrid{ grid-template-columns:1fr; } }
+  .checkGrid li{ font-size:14.5px; color:var(--ink); padding:8px 0 8px 24px; position:relative; border-bottom:1px dashed var(--line); }
+  .checkGrid li:before{ content:"✓"; position:absolute; left:0; top:8px; color:var(--accent); font-weight:800; }
+  .checkGrid li b{ display:block; color:var(--ink); font-weight:700; margin-bottom:2px; }
+  .checkGrid li span{ color:var(--ink-soft); font-size:13.5px; }
+
+  /* flow diagram */
+  .flow{ display:flex; align-items:stretch; gap:0; margin:8px 0 6px; overflow-x:auto; padding-bottom:8px; }
+  .flow .node{ flex:0 0 148px; background:var(--paper-raised); border:1px solid var(--line); border-radius:12px; padding:14px 14px; font-size:12.8px; color:var(--ink); box-shadow:var(--shadow); display:flex; align-items:center; text-align:center; }
+  .flow .arrow{ flex:0 0 30px; display:flex; align-items:center; justify-content:center; color:var(--ink-soft); font-size:18px; }
+  @media (max-width:900px){ .flow{ flex-direction:column; } .flow .node{ flex:0 0 auto; } .flow .arrow{ transform:rotate(90deg); padding:2px 0; } }
+
+  /* fraction bar */
+  .frac{ display:inline-flex; flex-direction:column; align-items:center; vertical-align:middle; margin:0 .15em; font-family:ui-monospace,"SFMono-Regular",Consolas,monospace; font-size:.92em; line-height:1.05; }
+  .frac .num, .frac .den{ padding:0 .2em; }
+  .frac .bar{ width:100%; height:1.5px; background:currentColor; margin:1px 0; }
+  .worked{ background:var(--paper-raised); border:1px solid var(--line); border-radius:14px; padding:22px 24px; box-shadow:var(--shadow); margin:18px 0; }
+  .worked h4{ font-size:14px; margin-bottom:10px; color:var(--ink); }
+  .worked .line{ display:flex; align-items:center; gap:14px; font-size:20px; padding:6px 0; flex-wrap:wrap; }
+  .worked .line .eq{ color:var(--ink-soft); font-size:16px; }
+  .worked .note{ font-size:13px; color:var(--ink-soft); margin-top:10px; }
+  .opTag{ display:inline-block; font-size:11px; font-weight:700; letter-spacing:.4px; padding:3px 9px; border-radius:20px; background:var(--warm-soft); color:var(--warm); }
+
+  .mathGrid{ display:grid; grid-template-columns:1fr 1fr; gap:22px; margin-top:8px; }
+  @media (max-width:820px){ .mathGrid{ grid-template-columns:1fr; } }
+
+  /* bar / circle model demos */
+  .modelRow{ display:flex; gap:28px; align-items:center; flex-wrap:wrap; margin:14px 0; }
+  .barModel{ display:flex; width:220px; height:38px; border:1.5px solid var(--line-strong); border-radius:6px; overflow:hidden; }
+  .barModel .seg{ flex:1; border-right:1.5px solid var(--line-strong); }
+  .barModel .seg:last-child{ border-right:none; }
+  .barModel .seg.on{ background:var(--accent); }
+  .barModel .seg.off{ background:var(--paper-raised); }
+  .circleModel{ width:72px; height:72px; border-radius:50%; border:1.5px solid var(--line-strong); }
+  .modelCaption{ font-size:12.5px; color:var(--ink-soft); }
+
+  .wrapTable{ overflow-x:auto; margin-top:8px; }
+  table.specTable{ width:100%; border-collapse:collapse; font-size:13.3px; min-width:640px; }
+  table.specTable th{ text-align:left; font-size:10.8px; letter-spacing:.8px; text-transform:uppercase; color:var(--ink-soft); font-weight:700; padding:9px 12px; border-bottom:1px solid var(--line-strong); white-space:nowrap; }
+  table.specTable td{ padding:11px 12px; border-bottom:1px solid var(--line); vertical-align:top; }
+  table.specTable tr:last-child td{ border-bottom:none; }
+  table.specTable td.pro{ color:var(--accent-ink); }
+  table.specTable td.con{ color:var(--ink-soft); }
+
+  pre.codeBlock{ background:var(--code-bg); border:1px solid var(--line); border-radius:12px; padding:18px 20px; overflow-x:auto; font-size:12.6px; line-height:1.65; }
+  pre.codeBlock code{ font-family:ui-monospace,"SFMono-Regular",Consolas,monospace; }
+  .k{ color:var(--code-key); } .s{ color:var(--code-str); } .n{ color:var(--code-num); }
+  .codeLabel{ font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--ink-soft); margin-bottom:8px; }
+  .apiGrid{ display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-top:6px; }
+  @media (max-width:820px){ .apiGrid{ grid-template-columns:1fr; } }
+  .endpointList{ list-style:none; margin:14px 0 0; padding:0; }
+  .endpointList li{ display:flex; gap:10px; align-items:baseline; padding:10px 0; border-bottom:1px dashed var(--line); font-size:13.5px; }
+  .endpointList .verb{ flex:0 0 auto; font-size:10.5px; font-weight:800; letter-spacing:.5px; padding:2px 7px; border-radius:5px; background:var(--accent-soft); color:var(--accent-ink); }
+  .endpointList .path{ font-family:ui-monospace,monospace; color:var(--ink); }
+  .endpointList .desc{ color:var(--ink-soft); font-size:12.8px; }
+
+  /* roadmap timeline */
+  .timeline{ display:flex; gap:2px; margin:20px 0 6px; border-radius:10px; overflow:hidden; }
+  .timeline .seg{ padding:16px 4px; text-align:center; font-size:11.5px; color:#fff; display:flex; flex-direction:column; gap:4px; justify-content:center; }
+  .timeline .seg b{ font-size:13px; display:block; }
+  .phaseList{ display:grid; grid-template-columns:1fr; gap:0; margin-top:22px; }
+  .phaseRow{ display:grid; grid-template-columns:170px 1fr; gap:18px; padding:16px 0; border-bottom:1px solid var(--line); }
+  @media (max-width:640px){ .phaseRow{ grid-template-columns:1fr; gap:4px; } }
+  .phaseRow:last-child{ border-bottom:none; }
+  .phaseRow .phaseName{ font-weight:700; font-size:14.5px; }
+  .phaseRow .phaseDur{ font-size:12.5px; color:var(--ink-soft); }
+  .phaseRow .phaseDesc{ font-size:13.8px; color:var(--ink-soft); }
+
+  .statRow{ display:flex; gap:32px; flex-wrap:wrap; margin:26px 0 4px; }
+  .statRow .stat b{ display:block; font-size:26px; color:var(--accent-ink); font-weight:800; }
+  .statRow .stat span{ font-size:12px; color:var(--ink-soft); }
+
+  .footNote{ font-size:12.5px; color:var(--ink-soft); margin-top:10px; }
+
+  @media (prefers-reduced-motion: no-preference){
+    #topnav a{ transition:background-color .15s ease, color .15s ease; }
+  }
+</style>
+
+<nav id="topnav">
+  <div class="inner">
+    <span class="brand">แอปฝึกโจทย์เศษส่วน</span>
+    <a href="#summary">สรุปผู้บริหาร</a>
+    <a href="#requirements">ข้อกำหนด</a>
+    <a href="#flow">โฟลว์ผู้ใช้</a>
+    <a href="#math">อัลกอริทึม</a>
+    <a href="#stack">เทคโนโลยี</a>
+    <a href="#api">API</a>
+    <a href="#a11y">การเข้าถึง</a>
+    <a href="#roadmap">แผนงาน</a>
+  </div>
+</nav>
+
+<main>
+
+<section id="hero" style="border-top:none;">
+  <div class="prose">
+    <div class="kicker"><span class="dot"></span><span>เอกสารออกแบบระบบ · ฉบับข้อเสนอ</span></div>
+    <h1>แอปสร้างและแก้โจทย์<em>เศษส่วน</em> ทีละขั้นตอน</h1>
+    <p class="sub">เครื่องมือฝึกคณิตศาสตร์สำหรับผู้เรียนไทย ที่สร้างโจทย์เศษส่วนจากพารามิเตอร์ที่ผู้ใช้กำหนด คำนวณคำตอบแบบ exact arithmetic และอธิบายทุกขั้นตอนด้วยข้อความและภาพประกอบ</p>
+    <div class="meta">
+      <div><b>4</b>การดำเนินการ: บวก ลบ คูณ หาร</div>
+      <div><b>12–18 สัปดาห์</b>ประมาณการพัฒนา 5 เฟส</div>
+      <div><b>ไทยเป็นหลัก</b>UI และคำอธิบายขั้นตอนทั้งหมด</div>
+      <div><b>Exact</b>คำนวณแบบเศษส่วนล้วน ไม่ปัดทศนิยม</div>
+    </div>
+  </div>
+</section>
+
+<section id="summary">
+  <span class="eyebrow">สรุปผู้บริหาร</span>
+  <h2 class="sectionTitle">โจทย์ที่แอปนี้แก้ให้</h2>
+  <div class="prose">
+    <p>ผู้เรียนเศษส่วนมักเข้าใจ<b>คำตอบ</b>แต่ไม่เห็น<b>กระบวนการ</b> — แอปนี้แก้ปัญหานั้นด้วยการรับอินพุตเป็นนิพจน์เศษส่วน จำนวนเต็ม หรือจำนวนผสม สร้างโจทย์ใหม่ตามพารามิเตอร์ที่ผู้ใช้กำหนด (ขอบเขตตัวเศษ/ตัวส่วน, ชนิดการดำเนินการ, จำนวนโจทย์) แล้วคำนวณผลลัพธ์แบบแม่นยำพร้อมแสดงขั้นตอนพีชคณิตทีละขั้น — แต่ละขั้นมีทั้งสัญกรณ์คณิตศาสตร์และภาพประกอบ (แถบหรือวงกลมแบ่งส่วน) กำกับ</p>
+    <p>สถาปัตยกรรมที่แนะนำ: เว็บหรือแอปข้ามแพลตฟอร์ม ใช้ไลบรารีคำนวณเชิงสัญลักษณ์ (math.js หรือ SymPy) ร่วมกับตัวเรนเดอร์สมการ (KaTeX เหนือกว่า MathJax ด้านความเร็วราว 20–30 เท่า) และกราฟิก SVG/Canvas สำหรับภาพประกอบ หากไม่ระบุขอบเขตค่า ระบบถือว่าไม่มีข้อจำกัด แต่แนะนำให้ผู้ใช้กำหนดเองเพื่อประสิทธิภาพที่ดี</p>
+    <div class="statRow">
+      <div class="stat"><b>5</b><span>เฟสการพัฒนา</span></div>
+      <div class="stat"><b>O(log n)</b><span>ความซับซ้อนของ gcd แบบยูคลิด</span></div>
+      <div class="stat"><b>2 คน+</b><span>ทีมพัฒนาขั้นต่ำที่แนะนำ</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="requirements">
+  <span class="eyebrow">ข้อกำหนดฟังก์ชันหลัก</span>
+  <h2 class="sectionTitle">สิ่งที่ระบบต้องทำได้</h2>
+  <p class="sectionLede">ครอบคลุมตั้งแต่รับอินพุต สร้างโจทย์ คำนวณ ไปจนถึงแสดงผลลัพธ์แบบเข้าถึงได้</p>
+  <ul class="checkGrid">
+    <li><b>อินพุตเศษส่วน/จำนวนผสม</b><span>รูปแบบ "ตัวเศษ/ตัวส่วน" เช่น 3/4 หรือ "a b/c" เช่น 2 1/3</span></li>
+    <li><b>สร้างโจทย์อัตโนมัติ</b><span>กำหนดชนิดการดำเนินการ ขอบเขตค่า และจำนวนโจทย์ที่ต้องการ</span></li>
+    <li><b>คำนวณแบบ exact</b><span>เศษส่วนล้วน ไม่แปลงเป็นทศนิยม ลดรูปด้วย gcd เสมอ</span></li>
+    <li><b>คำอธิบายทีละขั้น</b><span>เช่น หา ครน. บวกตัวเศษ ลดรูปผลลัพธ์ — อ้างอิงแนวทางของ mathsteps</span></li>
+    <li><b>ภาพประกอบทุกขั้นตอน</b><span>แถบหรือวงกลมแบ่งส่วนที่สอดคล้องกับขั้นตอนนั้นโดยเฉพาะ</span></li>
+    <li><b>แสดงผลลัพธ์พร้อม LaTeX</b><span>เรนเดอร์สวยงามด้วย KaTeX/MathJax พร้อมปุ่มเลื่อนขั้นตอน</span></li>
+    <li><b>ไม่จำกัดค่าโดยปริยาย</b><span>หากผู้ใช้ไม่ระบุขอบเขต ถือว่าไม่มีข้อจำกัด แต่แนะนำให้กำหนดเพื่อประสิทธิภาพ</span></li>
+    <li><b>ประสิทธิภาพ</b><span>ใช้อัลกอริทึมยูคลิดหา gcd ซึ่งมีประสิทธิภาพสูงสำหรับตัวเลขขนาดใหญ่</span></li>
+  </ul>
+</section>
+
+<section id="flow">
+  <span class="eyebrow">โฟลว์ผู้ใช้และ UI/UX</span>
+  <h2 class="sectionTitle">จากพารามิเตอร์ ถึงภาพประกอบ</h2>
+  <p class="sectionLede">ผู้ใช้กำหนดโจทย์ → ระบบสุ่มชุดโจทย์ → เลือกโจทย์ → ดูขั้นตอนพร้อมภาพประกอบ เลื่อนไปมาได้โดยไม่โหลดหน้าใหม่</p>
+  <div class="flow">
+    <div class="node">ผู้ใช้ป้อนพารามิเตอร์โจทย์</div><div class="arrow">→</div>
+    <div class="node">ระบบสร้างชุดโจทย์อัตโนมัติ</div><div class="arrow">→</div>
+    <div class="node">รายการโจทย์ที่ถูกสร้าง</div><div class="arrow">→</div>
+    <div class="node">ผู้ใช้เลือกโจทย์เพื่อแก้</div><div class="arrow">→</div>
+    <div class="node">ระบบคำนวณผลลัพธ์และขั้นตอน</div><div class="arrow">→</div>
+    <div class="node">แสดงขั้นตอนทีละขั้น + ภาพประกอบ</div>
+  </div>
+  <p style="margin-top:18px;">การจัดวางหน้าจอแนะนำ: ฝั่งซ้ายเป็นข้อความ/สมการ (เรนเดอร์ด้วย KaTeX) ฝั่งขวาเป็นภาพประกอบ (SVG/Canvas) พร้อมปุ่ม "ก่อนหน้า / ถัดไป" ควบคุมการเลื่อนขั้นตอน สีที่ใช้ต้องมีคอนทราสต์สูงตามแนวทางการเข้าถึง และทุกภาพต้องมีคำบรรยาย (alt text) ภาษาไทย</p>
+</section>
+
+<section id="math">
+  <span class="eyebrow">อัลกอริทึมทางคณิตศาสตร์</span>
+  <h2 class="sectionTitle">การคำนวณเศษส่วนแบบแม่นยำ</h2>
+  <p class="sectionLede">ทุกการดำเนินการอิงตัวหารร่วมมากที่สุด (gcd) และตัวคูณร่วมน้อยที่สุด (lcm) ที่หาได้ด้วยอัลกอริทึมยูคลิด</p>
+
+  <div class="worked">
+    <h4>การบวก / การลบ — หา ครน. ก่อนเสมอ <span class="opTag">+ / −</span></h4>
+    <p style="max-width:60ch;">สูตร: <code>lcm(a,b) = |a·b| / gcd(a,b)</code> จากนั้นแปลงเศษทั้งสองให้อยู่ส่วนเดียวกันแล้วบวก/ลบตัวเศษ ก่อนลดรูปด้วย gcd ของผลลัพธ์</p>
+    <div class="line">
+      <span class="frac"><span class="num">1</span><span class="bar"></span><span class="den">2</span></span>
+      <span class="eq">+</span>
+      <span class="frac"><span class="num">3</span><span class="bar"></span><span class="den">4</span></span>
+      <span class="eq">=</span>
+      <span class="frac"><span class="num">2</span><span class="bar"></span><span class="den">4</span></span>
+      <span class="eq">+</span>
+      <span class="frac"><span class="num">3</span><span class="bar"></span><span class="den">4</span></span>
+      <span class="eq">=</span>
+      <span class="frac"><span class="num">5</span><span class="bar"></span><span class="den">4</span></span>
+    </div>
+    <div class="note">gcd(2,4)=2 → lcm(2,4)=4 · ผลลัพธ์ 5/4 ลดรูปแล้ว (gcd(5,4)=1)</div>
+  </div>
+
+  <div class="mathGrid">
+    <div class="worked">
+      <h4>การคูณ <span class="opTag">×</span></h4>
+      <p style="max-width:40ch;">คูณตัวเศษกับตัวเศษ ตัวส่วนกับตัวส่วน แล้วลดรูปด้วย gcd</p>
+      <div class="line" style="font-size:17px;">
+        <span class="frac"><span class="num">2</span><span class="bar"></span><span class="den">3</span></span>
+        <span class="eq">×</span>
+        <span class="frac"><span class="num">3</span><span class="bar"></span><span class="den">5</span></span>
+        <span class="eq">=</span>
+        <span class="frac"><span class="num">6</span><span class="bar"></span><span class="den">15</span></span>
+        <span class="eq">=</span>
+        <span class="frac"><span class="num">2</span><span class="bar"></span><span class="den">5</span></span>
+      </div>
+    </div>
+    <div class="worked">
+      <h4>การหาร <span class="opTag">÷</span></h4>
+      <p style="max-width:40ch;">คูณด้วยส่วนกลับ (reciprocal) ของตัวหาร แล้วทำตามขั้นตอนการคูณ</p>
+      <div class="line" style="font-size:17px;">
+        <span class="frac"><span class="num">2</span><span class="bar"></span><span class="den">3</span></span>
+        <span class="eq">÷</span>
+        <span class="frac"><span class="num">4</span><span class="bar"></span><span class="den">5</span></span>
+        <span class="eq">=</span>
+        <span class="frac"><span class="num">2</span><span class="bar"></span><span class="den">3</span></span>
+        <span class="eq">×</span>
+        <span class="frac"><span class="num">5</span><span class="bar"></span><span class="den">4</span></span>
+        <span class="eq">=</span>
+        <span class="frac"><span class="num">5</span><span class="bar"></span><span class="den">6</span></span>
+      </div>
+    </div>
+    <div class="worked">
+      <h4>การลดรูป <span class="opTag">simplify</span></h4>
+      <p style="max-width:40ch;">หารตัวเศษและตัวส่วนด้วย gcd ของทั้งคู่</p>
+      <div class="line" style="font-size:17px;">
+        <span class="frac"><span class="num">42</span><span class="bar"></span><span class="den">56</span></span>
+        <span class="eq">÷ gcd=14</span>
+        <span class="eq">=</span>
+        <span class="frac"><span class="num">3</span><span class="bar"></span><span class="den">4</span></span>
+      </div>
+    </div>
+    <div class="worked">
+      <h4>เลขผสม ↔ เศษเกิน <span class="opTag">convert</span></h4>
+      <p style="max-width:40ch;">คูณส่วนด้วยจำนวนเต็มแล้วบวกตัวเศษ / หรือหารแบบยูคลิดเพื่อย้อนกลับ</p>
+      <div class="line" style="font-size:17px;">
+        <span>2</span>
+        <span class="frac"><span class="num">3</span><span class="bar"></span><span class="den">4</span></span>
+        <span class="eq">=</span>
+        <span class="frac"><span class="num">11</span><span class="bar"></span><span class="den">4</span></span>
+      </div>
+    </div>
+  </div>
+
+  <h3 style="margin-top:36px; font-size:16px;">ตัวอย่างภาพประกอบที่ระบบจะสร้าง</h3>
+  <p class="sectionLede" style="margin-bottom:10px;">แต่ละขั้นตอนจับคู่กับภาพแบบแถบหรือวงกลมแบ่งส่วน เพื่อให้เห็นสัดส่วนจริง ไม่ใช่แค่ตัวเลข</p>
+  <div class="modelRow">
+    <div>
+      <div class="barModel" role="img" aria-label="แถบแบ่งส่วนเศษ 3 ต่อ 5">
+        <div class="seg on"></div><div class="seg on"></div><div class="seg on"></div><div class="seg off"></div><div class="seg off"></div>
+      </div>
+      <div class="modelCaption">แถบแบ่งส่วน 3/5</div>
+    </div>
+    <div>
+      <div class="circleModel" role="img" aria-label="วงกลมแบ่ง 4 ส่วน เติมสี 3 ส่วน" style="background:conic-gradient(var(--accent) 0 75%, var(--paper-raised) 0 100%);"></div>
+      <div class="modelCaption">วงกลมแบ่ง 3/4</div>
+    </div>
+    <div>
+      <div class="barModel" role="img" aria-label="แถบแบ่งส่วนเศษ 5 ต่อ 4 หลังหาตัวส่วนร่วม">
+        <div class="seg on"></div><div class="seg on"></div><div class="seg on"></div><div class="seg on"></div>
+      </div>
+      <div class="modelCaption">แถบเปรียบเทียบ 5/4 (เกินหน่วย)</div>
+    </div>
+  </div>
+</section>
+
+<section id="stack">
+  <span class="eyebrow">ตัวเลือกเทคโนโลยี</span>
+  <h2 class="sectionTitle">แพลตฟอร์มและไลบรารี</h2>
+  <p class="sectionLede">ข้อดี/ข้อจำกัดของแต่ละแนวทาง เพื่อเลือกให้เหมาะกับทีมและขอบเขตงานจริง</p>
+  <div class="wrapTable">
+    <table class="specTable">
+      <thead><tr><th>แพลตฟอร์ม</th><th>ภาษา / เฟรมเวิร์ก</th><th>ไลบรารีหลัก</th><th>ข้อดี</th><th>ข้อจำกัด</th></tr></thead>
+      <tbody>
+        <tr><td>เว็บ (React)</td><td>JavaScript / TS</td><td>math.js, mathsteps, KaTeX, D3.js</td><td class="pro">พัฒนาเร็ว ทำ PWA ได้ ecosystem ใหญ่</td><td class="con">พึ่งเบราว์เซอร์ ต้องจัดการขนาด bundle</td></tr>
+        <tr><td>เว็บ (Angular / Vue)</td><td>JavaScript / TS</td><td>math.js, KaTeX, D3.js</td><td class="pro">เหมาะองค์กร (Angular) เรียนรู้ง่าย (Vue)</td><td class="con">ต้องเลือกไลบรารีเสริมเอง</td></tr>
+        <tr><td>มือถือ Android</td><td>Kotlin / Java</td><td>BigInteger, MathView, Compose</td><td class="pro">เข้าถึงประสิทธิภาพอุปกรณ์เต็มที่</td><td class="con">ต้องทำ iOS แยก ใช้เวลามาก</td></tr>
+        <tr><td>มือถือ iOS</td><td>Swift</td><td>FractionKit, SwiftUI</td><td class="pro">UI เนทีฟลื่นไหล ประสิทธิภาพดี</td><td class="con">เฉพาะ iOS ค่าใช้จ่ายทีมแยก</td></tr>
+        <tr><td>ข้ามแพลตฟอร์ม (React Native)</td><td>JavaScript / TS</td><td>math.js, react-native-svg, MathJax (WebView)</td><td class="pro">โค้ดร่วม Android+iOS ชุมชนใหญ่</td><td class="con">ประสิทธิภาพไม่เต็มเท่าเนทีฟ</td></tr>
+        <tr><td>ข้ามแพลตฟอร์ม (Flutter)</td><td>Dart</td><td>math_expressions, flutter_math_fork, CustomPaint</td><td class="pro">UI สวยงาม ประสิทธิภาพดี โค้ดเดียวหลายแพลตฟอร์ม</td><td class="con">ตัวอย่าง/เอกสารน้อยกว่า JS</td></tr>
+        <tr><td>Backend (Node.js)</td><td>JavaScript / TS</td><td>math.js, algebra.js, mathsteps</td><td class="pro">สอดคล้องกับ frontend เขียนภาษาเดียวกัน</td><td class="con">ต้องดูแลเซิร์ฟเวอร์เอง</td></tr>
+        <tr><td>Backend (Python)</td><td>Python</td><td>SymPy, NumPy, Flask/Django</td><td class="pro">SymPy จัดการ Fraction/simplify ได้แม่นยำ</td><td class="con">ต้นทุนประสิทธิภาพสูงขึ้นเมื่อผู้ใช้มาก</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="wrapTable" style="margin-top:26px;">
+    <table class="specTable">
+      <thead><tr><th>หมวด</th><th>ไลบรารี</th><th>จุดเด่น</th><th>ข้อควรระวัง</th></tr></thead>
+      <tbody>
+        <tr><td>คำนวณเศษส่วน</td><td>math.js / fraction.js</td><td class="pro">รองรับ Fraction type และ gcd ในตัว</td><td class="con">ไม่ได้ออกแบบมาเพื่ออธิบายขั้นตอนโดยตรง</td></tr>
+        <tr><td>Step-by-step</td><td>mathsteps</td><td class="pro">มีตัวอย่าง ADD_FRACTIONS ให้อ้างอิงโครงสร้าง</td><td class="con">หยุดพัฒนาแล้ว (archived) — ใช้เป็นแนวทาง ไม่ใช่ dependency หลัก</td></tr>
+        <tr><td>เรนเดอร์สมการ</td><td>KaTeX</td><td class="pro">เร็วกว่า MathJax ราว 20–30 เท่า</td><td class="con">ฟีเจอร์ขั้นสูงบางอย่างยังไม่ครบเท่า MathJax</td></tr>
+        <tr><td>ภาพประกอบ</td><td>SVG / Canvas / D3.js</td><td class="pro">ยืดหยุ่น เข้าถึงได้ผ่าน alt text (SVG)</td><td class="con">Canvas เข้าถึงยากกว่าสำหรับ screen reader</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="api">
+  <span class="eyebrow">โมเดลข้อมูลและ API</span>
+  <h2 class="sectionTitle">REST API แบบ JSON</h2>
+  <p class="sectionLede">ออกแบบให้ frontend เรียกสร้างโจทย์และขอขั้นตอนการแก้แยกกันได้ เพื่อรองรับการแชร์โจทย์ในอนาคต</p>
+  <div class="apiGrid">
+    <div>
+      <div class="codeLabel">Request — POST /api/solve</div>
+      <pre class="codeBlock"><code>{
+  <span class="k">"operation"</span>: <span class="s">"add"</span>,
+  <span class="k">"operands"</span>: [<span class="s">"2 1/3"</span>, <span class="s">"4/5"</span>],
+  <span class="k">"maxDenominator"</span>: <span class="n">20</span>,
+  <span class="k">"problemCount"</span>: <span class="n">5</span>
+}</code></pre>
+    </div>
+    <div>
+      <div class="codeLabel">Response — ขั้นตอนละเอียด</div>
+      <pre class="codeBlock"><code>{
+  <span class="k">"status"</span>: <span class="s">"success"</span>,
+  <span class="k">"problems"</span>: [{
+    <span class="k">"expression"</span>: <span class="s">"2 1/3 + 4/5"</span>,
+    <span class="k">"result"</span>: <span class="s">"3 2/15"</span>,
+    <span class="k">"steps"</span>: [
+      { <span class="k">"description"</span>: <span class="s">"แปลงเลขผสมเป็นเศษเกิน"</span>,
+        <span class="k">"before"</span>: <span class="s">"2 1/3 + 4/5"</span>,
+        <span class="k">"after"</span>: <span class="s">"7/3 + 4/5"</span> },
+      { <span class="k">"description"</span>: <span class="s">"หา ครน. ของ 3 และ 5"</span>,
+        <span class="k">"latex"</span>: <span class="s">"lcm(3,5)=15"</span> },
+      { <span class="k">"description"</span>: <span class="s">"บวกตัวเศษแล้วลดรูป"</span>,
+        <span class="k">"after"</span>: <span class="s">"47/15 = 3 2/15"</span> }
+    ]
+  }]
+}</code></pre>
+    </div>
+  </div>
+  <ul class="endpointList">
+    <li><span class="verb">POST</span><span class="path">/api/generate</span><span class="desc">สร้างชุดโจทย์จาก operation, ขอบเขตค่า และจำนวนที่ต้องการ</span></li>
+    <li><span class="verb">POST</span><span class="path">/api/solve</span><span class="desc">รับนิพจน์หรือรหัสโจทย์ คืนผลลัพธ์และขั้นตอนทั้งหมด</span></li>
+    <li><span class="verb">GET</span><span class="path">/api/problems/{id}</span><span class="desc">ดึงโจทย์เดิมเพื่อแชร์หรือย้อนกลับมาทำต่อ</span></li>
+    <li><span class="verb">GET</span><span class="path">/api/steps/{id}</span><span class="desc">ดึงเฉพาะขั้นตอนการแก้ของโจทย์ที่ระบุ</span></li>
+  </ul>
+  <p class="footNote">ชื่อคีย์ JSON ใช้ภาษาอังกฤษเพื่อความสะดวกในการพัฒนา/debug ส่วนข้อความอธิบาย (description) เป็นภาษาไทยเสมอ</p>
+</section>
+
+<section id="a11y">
+  <span class="eyebrow">การเข้าถึงและหลายภาษา</span>
+  <h2 class="sectionTitle">ออกแบบเพื่อผู้เรียนไทยทุกคน</h2>
+  <div class="mathGrid">
+    <div>
+      <h3 style="font-size:15px;">การเข้าถึง (Accessibility)</h3>
+      <ul class="checkGrid" style="grid-template-columns:1fr;">
+        <li><b>คอนทราสต์สูง</b><span>หลีกเลี่ยงสีอ่อนบนพื้นอ่อน ทั้งข้อความและกราฟิก</span></li>
+        <li><b>Alt text ภาษาไทย</b><span>ทุกภาพประกอบมีคำบรรยาย เช่น "แถบแบ่งส่วนเศษ 3/5"</span></li>
+        <li><b>คีย์บอร์ดนำทางได้</b><span>ทดสอบด้วย Lighthouse หรือ axe ตามแนวทาง WCAG</span></li>
+        <li><b>โครงสร้างหัวข้อชัดเจน</b><span>heading/list เรียงลำดับ ไม่ซ้อนเนื้อหาแบบสับสน</span></li>
+      </ul>
+    </div>
+    <div>
+      <h3 style="font-size:15px;">การรองรับภาษาไทย (Localization)</h3>
+      <ul class="checkGrid" style="grid-template-columns:1fr;">
+        <li><b>ศัพท์คณิตศาสตร์มาตรฐาน</b><span>"บวก" "คูณ" "เศษส่วน" ตรงตามหลักสูตรไทย</span></li>
+        <li><b>ฟอนต์รองรับไทยเต็มรูปแบบ</b><span>Noto Sans Thai, Sarabun, Leelawadee UI</span></li>
+        <li><b>โครงสร้าง i18n</b><span>i18next / react-intl เผื่อขยายภาษาอื่นในอนาคต</span></li>
+        <li><b>Responsive ทุกอุปกรณ์</b><span>ปรับขนาดได้ทั้งเดสก์ท็อปและมือถือ</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="roadmap">
+  <span class="eyebrow">แผนการพัฒนาและตารางเวลา</span>
+  <h2 class="sectionTitle">5 เฟส ประมาณ 12–18 สัปดาห์</h2>
+  <div class="timeline" aria-hidden="true">
+    <div class="seg" style="flex-grow:2.5; background:#2f6f5e;"><b>ออกแบบ</b>2–3 สัปดาห์</div>
+    <div class="seg" style="flex-grow:5; background:#256b56;"><b>คณิตศาสตร์ + Backend</b>4–6 สัปดาห์</div>
+    <div class="seg" style="flex-grow:3.5; background:#1f5748;"><b>UI/UX + ภาพประกอบ</b>3–4 สัปดาห์</div>
+    <div class="seg" style="flex-grow:2.5; background:#184d3d;"><b>ทดสอบระบบ</b>2–3 สัปดาห์</div>
+    <div class="seg" style="flex-grow:1.5; background:#123a2e;"><b>ปรับปรุงส่งมอบ</b>1–2 สัปดาห์</div>
+  </div>
+  <div class="phaseList">
+    <div class="phaseRow"><div><div class="phaseName">1 · ออกแบบ</div><div class="phaseDur">2–3 สัปดาห์</div></div><div class="phaseDesc">ระดมความต้องการ ดราฟ mockup, flowchart, ออกแบบ data model และ API คร่าว ๆ</div></div>
+    <div class="phaseRow"><div><div class="phaseName">2 · คณิตศาสตร์ + Backend</div><div class="phaseDur">4–6 สัปดาห์</div></div><div class="phaseDesc">พัฒนาฟังก์ชันบวก/ลบ/คูณ/หาร แปลงเลขผสม การลดรูป พร้อม unit test และ API ให้ frontend เรียกใช้</div></div>
+    <div class="phaseRow"><div><div class="phaseName">3 · UI/UX + ภาพประกอบ</div><div class="phaseDur">3–4 สัปดาห์</div></div><div class="phaseDesc">สร้างฟอร์มพารามิเตอร์ ตารางโจทย์ หน้าขั้นตอน เรนเดอร์สมการด้วย KaTeX และวาดภาพประกอบ SVG/Canvas</div></div>
+    <div class="phaseRow"><div><div class="phaseName">4 · Integration &amp; Testing</div><div class="phaseDur">2–3 สัปดาห์</div></div><div class="phaseDesc">เชื่อม frontend–backend เขียน E2E test ตรวจความถูกต้องของสมการและประสิทธิภาพ แก้บั๊กตาม feedback</div></div>
+    <div class="phaseRow"><div><div class="phaseName">5 · ปรับปรุงและส่งมอบ</div><div class="phaseDur">1–2 สัปดาห์</div></div><div class="phaseDesc">ตรวจ UI/UX รอบสุดท้าย ทดสอบ accessibility ที่เหลือ จัดทำคู่มือผู้ใช้ และวางแผน deployment</div></div>
+  </div>
+  <p class="footNote">ทรัพยากรที่แนะนำ: นักพัฒนา 2–3 คน (Frontend/Backend), นักออกแบบ UX 1 คน, ผู้ทดสอบ (QA) 1 คน — ปรับตามขนาดทีมและขอบเขตงานจริง</p>
+</section>
+
+<section id="closing" style="border-bottom:none;">
+  <div class="prose">
+    <blockquote>
+      เครื่องมือที่ดีไม่ใช่แค่บอกคำตอบ แต่พาผู้เรียนเดินผ่านทุกก้าวของกระบวนการคิด — ด้วยภาษาและภาพที่พวกเขาคุ้นเคย
+    </blockquote>
+  </div>
+</section>
+
+</main>
