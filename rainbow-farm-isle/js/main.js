@@ -12,7 +12,6 @@ function updateCamera(){
 
 /* ============================= WALKING / PROXIMITY ============================= */
 const MOVE_SPEED = 0.16;
-const ISLAND_WALK_RADIUS = 31.5;
 function dialogueOpen(){ return document.getElementById('dialogueScreen').classList.contains('show'); }
 function handleMovement(){
   if(!state.gameStarted || dialogueOpen()) return;
@@ -31,8 +30,9 @@ function handleMovement(){
   player.position.z += nz * speed;
   player.rotation.y = Math.atan2(nx, nz);
   const r = Math.hypot(player.position.x, player.position.z);
-  if(r > ISLAND_WALK_RADIUS){
-    const s = ISLAND_WALK_RADIUS / r;
+  const maxR = REGIONS[state.activeRegion].walkRadius;
+  if(r > maxR){
+    const s = maxR / r;
     player.position.x *= s; player.position.z *= s;
   }
 }
@@ -123,7 +123,7 @@ function animate(){
     const wl = b.children.find(c=>c.name==='wingL'), wr = b.children.find(c=>c.name==='wingR');
     if(wl) wl.rotation.x = flap; if(wr) wr.rotation.x = -flap;
   });
-  islandGroup.position.y = Math.sin(now*0.0005)*0.6;
+  REGIONS[state.activeRegion].group.position.y = Math.sin(now*0.0005)*0.6;
 
   // cosmetic day/night cycle: sky tint + light intensity + star opacity, never fully dark
   const nightAmt = (1 - Math.cos(now*0.000022*Math.PI*2)) / 2;
@@ -202,6 +202,7 @@ window.addEventListener('resize', ()=>{
   if(isTouchDevice) document.body.classList.add('touch-device');
   initJoystick();
   updateMuteButtons();
+  markRegionVisited(state.activeRegion);
   const streakData = computeStreakOnLoad();
   checkStreakAchievements(streakData);
   renderStreakPanel();

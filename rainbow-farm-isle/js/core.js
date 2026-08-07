@@ -1,7 +1,7 @@
 /* ============================= STATE ============================= */
 const state = {
   gameStarted:false, domeZoom: 38, domeZoomMin: 20, domeZoomMax: 62, selectedSeedType:null,
-  keys:{}, playerAngle:0, joyDX:0, joyDY:0, activeNpcId:null
+  keys:{}, playerAngle:0, joyDX:0, joyDY:0, activeNpcId:null, activeRegion:'sunmeadow'
 };
 let isTouchDevice = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
 
@@ -179,7 +179,10 @@ const ACHIEVEMENTS = [
   { id:'streak14', name:'ขาประจำ 14 วัน', desc:'เข้าเล่นติดต่อกัน 14 วัน', icon:'🔥' },
   { id:'first_friend', name:'เพื่อนคนแรก', desc:'มีความสัมพันธ์ระดับ "เพื่อน" กับชาวเกาะคนใดคนหนึ่ง', icon:'🤝' },
   { id:'family_tier', name:'ครอบครัวหมู่บ้าน', desc:'มีความสัมพันธ์ระดับสูงสุดกับชาวเกาะคนใดคนหนึ่ง', icon:'🏡' },
-  { id:'first_secret', name:'นักสำรวจตัวจริง', desc:'ค้นพบความลับแรกของเกาะ', icon:'✨' }
+  { id:'first_secret', name:'นักสำรวจตัวจริง', desc:'ค้นพบความลับแรกของเกาะ', icon:'✨' },
+  { id:'angler10', name:'นักตกปลามือฉมัง', desc:'ตกปลาที่ท่าเรือดริฟต์วูดให้ได้ครบ 10 ตัว', icon:'🎣' },
+  { id:'region_explorer', name:'นักสำรวจดินแดน', desc:'ไปเยือนครบทุกดินแดนใน Everbloom', icon:'🗺️' },
+  { id:'secret_hunter', name:'นักล่าความลับ', desc:'ค้นพบความลับครบทุกชิ้นในทุกดินแดน', icon:'💎' }
 ];
 function getUnlockedAchievements(){
   try{ const l = JSON.parse(localStorage.getItem('rfi_achievements')); return Array.isArray(l) ? l : []; } catch(e){ return []; }

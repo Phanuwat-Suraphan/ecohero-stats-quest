@@ -40,7 +40,7 @@ function setFlag(key){ const f = getWorldFlags(); f[key] = true; saveWorldFlags(
 
 /* ============================= NPCS ============================= */
 const NPC_DEFS = [
-  { id:'panwan', name:'ป้าหวาน', role:'แม่หมู่บ้าน', emoji:'👩‍🍳', bodyColor:0xffab52, headColor:0xfff2df, x:11, z:-22,
+  { id:'panwan', name:'ป้าหวาน', role:'แม่หมู่บ้าน', emoji:'👩‍🍳', bodyColor:0xffab52, headColor:0xfff2df, region:'sunmeadow', x:11, z:-22,
     lines:{
       stranger:'สวัสดีจ้ะ! ไม่เคยเห็นหน้ามาก่อนเลยนะ มาเที่ยวเกาะเหรอ?',
       acquaintance:'วันนี้ขนมเพิ่งออกจากเตาเลยนะ อยากชิมไหม?',
@@ -57,7 +57,7 @@ const NPC_DEFS = [
       done:'หลานสาวยังพูดถึงลูกโป่งใบนั้นอยู่เลยนะ ขอบคุณอีกครั้งจ้ะ',
       itemFlag:'balloonFound', reward:{coins:40, xp:15} }
   },
-  { id:'yaibua', name:'คุณยายบัว', role:'คนสวนดอกไม้', emoji:'👵', bodyColor:0x8fe07a, headColor:0xfff2df, x:-19, z:17,
+  { id:'yaibua', name:'คุณยายบัว', role:'คนสวนดอกไม้', emoji:'👵', bodyColor:0x8fe07a, headColor:0xfff2df, region:'sunmeadow', x:-19, z:17,
     lines:{
       stranger:'อ้าว มีคนมาเยี่ยมสวนยายด้วยเหรอจ๊ะ',
       acquaintance:'ดอกไม้พวกนี้ยายปลูกเองกับมือเลยนะ',
@@ -74,7 +74,7 @@ const NPC_DEFS = [
       done:'ตอนนี้ยายมองเห็นดอกไม้ชัดเจนขึ้นเยอะเลย ต้องขอบคุณเธอนะ',
       itemFlag:'glassesFound', reward:{coins:40, xp:15} }
   },
-  { id:'lungtai', name:'ลุงไถ', role:'หัวหน้าหมู่บ้าน', emoji:'👨‍🌾', bodyColor:0xffd166, headColor:0xfff8ea, x:1, z:-16,
+  { id:'lungtai', name:'ลุงไถ', role:'หัวหน้าหมู่บ้าน', emoji:'👨‍🌾', bodyColor:0xffd166, headColor:0xfff8ea, region:'sunmeadow', x:1, z:-16,
     lines:{
       stranger:'สวัสดี! ยินดีต้อนรับสู่เกาะของเรานะ',
       acquaintance:'เป็นยังไงบ้าง คุ้นเคยกับเกาะแล้วหรือยัง?',
@@ -116,16 +116,17 @@ function buildNpcMesh(def){
   addCuteFace(g, 0, 2.1, 0.56, 0.85, 0.3);
   g.position.set(def.x, 0, def.z);
   g.userData.idlePhase = Math.random()*Math.PI*2;
-  islandGroup.add(g);
+  regionGroupFor(def.region).add(g);
   return g;
 }
-NPC_DEFS.forEach(def=>{ npcMeshes[def.id] = buildNpcMesh(def); });
+// NPC_DEFS may still be extended (regions.js appends more entries) before meshes are
+// built — the actual build loop runs at the end of regions.js once every def exists.
 
 /* ============================= SECRETS: WORLD ITEMS ============================= */
 const worldItemDefs = [
-  { id:'balloon', emoji:'🎈', x:-25, z:-16, color:0xff9ec4, flagKey:'balloonFound' },
-  { id:'glasses', emoji:'👓', x:-16, z:21, color:0x6fb8e0, flagKey:'glassesFound' },
-  { id:'chest', emoji:'🎁', x:22, z:18, color:0xffd166, flagKey:'chestFound', secret:true, coins:80, xp:20 }
+  { id:'balloon', emoji:'🎈', x:-25, z:-16, color:0xff9ec4, flagKey:'balloonFound', region:'sunmeadow' },
+  { id:'glasses', emoji:'👓', x:-16, z:21, color:0x6fb8e0, flagKey:'glassesFound', region:'sunmeadow' },
+  { id:'chest', emoji:'🎁', x:22, z:18, color:0xffd166, flagKey:'chestFound', secret:true, coins:80, xp:20, region:'sunmeadow' }
 ];
 const worldItemMeshes = {};
 function buildWorldItem(def){
@@ -137,10 +138,10 @@ function buildWorldItem(def){
   g.add(glow, core);
   g.position.set(def.x, 0, def.z);
   g.userData.bobPhase = Math.random()*Math.PI*2;
-  islandGroup.add(g);
+  regionGroupFor(def.region).add(g);
   return g;
 }
-worldItemDefs.forEach(def=>{ worldItemMeshes[def.id] = buildWorldItem(def); });
+// same deal: worldItemDefs may still grow before regions.js's build loop runs
 function refreshWorldItemVisibility(){
   worldItemDefs.forEach(def=>{
     const mesh = worldItemMeshes[def.id];
@@ -158,6 +159,8 @@ function collectWorldItem(id){
   if(def.xp) addXp(def.xp);
   if(def.secret){
     unlockAchievement('first_secret');
+    const allSecrets = worldItemDefs.filter(w=>w.secret);
+    if(allSecrets.length && allSecrets.every(w=>isFlagSet(w.flagKey))) unlockAchievement('secret_hunter');
     toastFarm(`✨ พบความลับ! ${def.emoji} (+${def.coins} เหรียญ)`, 'ok');
   } else {
     const owner = NPC_DEFS.find(n=>n.quest && n.quest.itemFlag===def.flagKey);
@@ -173,13 +176,25 @@ let nearbyTarget = null;
 function checkProximity(){
   let best = null, bestDist = PROXIMITY_RADIUS;
   NPC_DEFS.forEach(def=>{
+    if(def.region !== state.activeRegion) return;
     const d = Math.hypot(player.position.x-def.x, player.position.z-def.z);
     if(d < bestDist){ bestDist = d; best = {type:'npc', id:def.id}; }
   });
   worldItemDefs.forEach(def=>{
+    if(def.region !== state.activeRegion) return;
     if(isFlagSet(def.flagKey)) return;
     const d = Math.hypot(player.position.x-def.x, player.position.z-def.z);
     if(d < bestDist){ bestDist = d; best = {type:'item', id:def.id}; }
+  });
+  (typeof travelPointDefs !== 'undefined' ? travelPointDefs : []).forEach(def=>{
+    if(def.region !== state.activeRegion) return;
+    const d = Math.hypot(player.position.x-def.x, player.position.z-def.z);
+    if(d < bestDist){ bestDist = d; best = {type:'travel', id:def.id}; }
+  });
+  (typeof activityPointDefs !== 'undefined' ? activityPointDefs : []).forEach(def=>{
+    if(def.region !== state.activeRegion) return;
+    const d = Math.hypot(player.position.x-def.x, player.position.z-def.z);
+    if(d < bestDist){ bestDist = d; best = {type:'activity', id:def.id}; }
   });
   const changed = JSON.stringify(best) !== JSON.stringify(nearbyTarget);
   nearbyTarget = best;
@@ -191,9 +206,15 @@ function renderProximityPrompt(){
   if(nearbyTarget.type === 'npc'){
     const def = NPC_DEFS.find(n=>n.id===nearbyTarget.id);
     el.innerHTML = `<button onclick="openDialogue('${def.id}')">💬 คุยกับ${def.name}</button>`;
-  } else {
+  } else if(nearbyTarget.type === 'item'){
     const def = worldItemDefs.find(w=>w.id===nearbyTarget.id);
     el.innerHTML = `<button onclick="collectWorldItem('${def.id}')">${def.emoji} เก็บ</button>`;
+  } else if(nearbyTarget.type === 'travel'){
+    const def = travelPointDefs.find(t=>t.id===nearbyTarget.id);
+    el.innerHTML = `<button onclick="travelTo('${def.targetRegion}')">${def.icon} ${def.label}</button>`;
+  } else if(nearbyTarget.type === 'activity'){
+    const def = activityPointDefs.find(a=>a.id===nearbyTarget.id);
+    el.innerHTML = `<button onclick="${def.onInteract}()">${def.icon} ${def.label}</button>`;
   }
   el.classList.add('show');
 }
