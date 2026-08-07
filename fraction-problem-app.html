@@ -1,0 +1,808 @@
+<title>แอปฝึกโจทย์เศษส่วน</title>
+<meta name="description" content="สร้างและแก้โจทย์เศษส่วนพร้อมคำอธิบายทีละขั้นตอนและภาพประกอบ" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root{
+    --paper:#eef1ee; --paper-raised:#ffffff; --ink:#1c2420; --ink-soft:#5e6b62;
+    --line:rgba(28,36,32,.14); --line-strong:rgba(28,36,32,.28);
+    --accent:#256b56; --accent-soft:#dcebe4; --accent-ink:#184d3d;
+    --warm:#b56a26; --warm-soft:#f3e3d0;
+    --danger:#a3372b; --danger-soft:#f5e0dc;
+    --shadow:0 1px 2px rgba(28,36,32,.08); --shadow-lift:0 6px 20px rgba(28,36,32,.10);
+    --radius:14px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#141a17; --paper-raised:#1c2420; --ink:#e7ece8; --ink-soft:#9fada4;
+      --line:rgba(231,236,232,.14); --line-strong:rgba(231,236,232,.28);
+      --accent:#5fbf9d; --accent-soft:#1f3730; --accent-ink:#a8e6cd;
+      --warm:#e0a262; --warm-soft:#3a2c1c;
+      --danger:#e08a7c; --danger-soft:#3a201c;
+      --shadow:0 1px 2px rgba(0,0,0,.3); --shadow-lift:0 10px 26px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#141a17; --paper-raised:#1c2420; --ink:#e7ece8; --ink-soft:#9fada4;
+    --line:rgba(231,236,232,.14); --line-strong:rgba(231,236,232,.28);
+    --accent:#5fbf9d; --accent-soft:#1f3730; --accent-ink:#a8e6cd;
+    --warm:#e0a262; --warm-soft:#3a2c1c;
+    --danger:#e08a7c; --danger-soft:#3a201c;
+    --shadow:0 1px 2px rgba(0,0,0,.3); --shadow-lift:0 10px 26px rgba(0,0,0,.35);
+  }
+  *{ box-sizing:border-box; }
+  html{ text-size-adjust:100%; }
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:-apple-system,"Segoe UI","Noto Sans Thai","Sarabun","Leelawadee UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    line-height:1.6; font-size:16px;
+  }
+  button, input, select{ font:inherit; color:inherit; }
+  :focus-visible{ outline:2.5px solid var(--accent); outline-offset:2px; border-radius:4px; }
+  code, .mono{ font-family:ui-monospace,"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace; font-variant-numeric:tabular-nums; }
+
+  header{ position:sticky; top:0; z-index:30; background:color-mix(in srgb, var(--paper) 92%, transparent); backdrop-filter:blur(6px); border-bottom:1px solid var(--line); }
+  header .inner{ max-width:960px; margin:0 auto; padding:14px 20px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  header .brand{ display:flex; align-items:baseline; gap:8px; }
+  header .brand b{ font-size:16px; font-weight:800; }
+  header .brand span{ font-size:12px; color:var(--ink-soft); }
+  header .resetBtn{ display:none; }
+  header .resetBtn.show{ display:inline-flex; }
+
+  main{ max-width:960px; margin:0 auto; padding:28px 20px 100px; }
+  .screen{ display:none; }
+  .screen.active{ display:block; }
+
+  h1,h2,h3{ text-wrap:balance; font-weight:800; margin:0 0 6px; }
+  p{ margin:0 0 1em; }
+  .lede{ color:var(--ink-soft); font-size:14.5px; max-width:62ch; margin-bottom:24px; }
+  .eyebrow{ font-size:11px; font-weight:700; letter-spacing:1.6px; text-transform:uppercase; color:var(--accent-ink); display:block; margin-bottom:6px; }
+
+  /* buttons */
+  .btn{ appearance:none; border:1px solid var(--line-strong); background:var(--paper-raised); color:var(--ink); font-size:14px; font-weight:600; padding:11px 20px; border-radius:10px; cursor:pointer; display:inline-flex; align-items:center; gap:8px; box-shadow:var(--shadow); }
+  .btn:hover{ border-color:var(--accent); }
+  .btn.primary{ background:var(--accent); border-color:var(--accent); color:#fff; }
+  .btn.primary:hover{ filter:brightness(1.06); }
+  .btn.ghost{ background:transparent; box-shadow:none; }
+  .btn:disabled{ opacity:.4; cursor:not-allowed; }
+  .btn:disabled:hover{ border-color:var(--line-strong); }
+
+  /* tabs */
+  .tabs{ display:flex; gap:6px; margin-bottom:22px; border-bottom:1px solid var(--line); }
+  .tabBtn{ appearance:none; background:none; border:none; border-bottom:2.5px solid transparent; padding:10px 4px; margin-right:22px; font-size:14.5px; font-weight:700; color:var(--ink-soft); cursor:pointer; }
+  .tabBtn.active{ color:var(--ink); border-bottom-color:var(--accent); }
+  .tabPanel{ display:none; }
+  .tabPanel.active{ display:block; }
+
+  /* form */
+  .card{ background:var(--paper-raised); border:1px solid var(--line); border-radius:var(--radius); padding:24px; box-shadow:var(--shadow); }
+  .field{ margin-bottom:20px; }
+  .field > label.groupLabel{ display:block; font-size:13px; font-weight:700; margin-bottom:8px; }
+  .opGrid{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+  @media (max-width:560px){ .opGrid{ grid-template-columns:repeat(2,1fr); } }
+  .opChip{ display:block; position:relative; cursor:pointer; }
+  .opChip input{ position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+  .opChip .box{ display:block; border:1.5px solid var(--line-strong); border-radius:10px; padding:12px 8px; text-align:center; font-size:14px; font-weight:700; }
+  .opChip input:checked + .box{ border-color:var(--accent); background:var(--accent-soft); color:var(--accent-ink); }
+  .opChip input:focus-visible + .box{ outline:2.5px solid var(--accent); outline-offset:2px; }
+  .opChip .sym{ display:block; font-size:19px; margin-bottom:2px; }
+
+  .rangeRow{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .numInput{ display:flex; align-items:center; gap:8px; }
+  .numInput label{ font-size:13px; color:var(--ink-soft); flex:0 0 auto; min-width:64px; }
+  .numInput input{ width:100%; border:1.5px solid var(--line-strong); border-radius:8px; padding:8px 10px; background:var(--paper); color:var(--ink); }
+  .presetRow{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:6px; }
+  .presetBtn{ font-size:12.5px; padding:6px 13px; border-radius:20px; border:1px solid var(--line-strong); background:var(--paper); cursor:pointer; font-weight:600; color:var(--ink-soft); }
+  .presetBtn:hover{ color:var(--ink); border-color:var(--accent); }
+  .checkRow{ display:flex; align-items:center; gap:10px; }
+  .checkRow input{ width:18px; height:18px; accent-color:var(--accent); }
+  .checkRow label{ font-size:14px; }
+  .fieldNote{ font-size:12.3px; color:var(--ink-soft); margin-top:6px; }
+  .errBox{ background:var(--danger-soft); color:var(--danger); border-radius:10px; padding:12px 14px; font-size:13.5px; margin-bottom:16px; display:none; }
+  .errBox.show{ display:block; }
+
+  .manualRow{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+  .manualRow input[type=text]{ flex:1 1 160px; min-width:120px; border:1.5px solid var(--line-strong); border-radius:8px; padding:11px 12px; background:var(--paper); color:var(--ink); font-size:16px; }
+  .manualRow select{ border:1.5px solid var(--line-strong); border-radius:8px; padding:11px 10px; background:var(--paper); color:var(--ink); font-size:18px; flex:0 0 auto; }
+
+  /* fraction typography */
+  .frac{ display:inline-flex; flex-direction:column; align-items:center; vertical-align:middle; margin:0 .12em; font-family:ui-monospace,"SFMono-Regular",Consolas,monospace; line-height:1.05; }
+  .frac .num, .frac .den{ padding:0 .2em; }
+  .frac .bar{ width:100%; height:1.5px; background:currentColor; margin:1px 0; }
+  .wholeNum{ font-weight:700; font-family:ui-monospace,"SFMono-Regular",Consolas,monospace; vertical-align:middle; margin-right:.06em; }
+  .exprLine{ font-size:22px; display:flex; align-items:center; flex-wrap:wrap; gap:2px; }
+
+  /* problem list */
+  .probGrid{ display:grid; gap:10px; }
+  .probCard{ display:flex; align-items:center; justify-content:space-between; gap:14px; background:var(--paper-raised); border:1px solid var(--line); border-radius:12px; padding:14px 18px; box-shadow:var(--shadow); }
+  .probCard .idx{ font-size:11.5px; color:var(--ink-soft); font-weight:700; flex:0 0 26px; }
+  .probCard .expr{ flex:1 1 auto; font-size:19px; display:flex; align-items:center; gap:2px; }
+  .probCard .solvedBadge{ font-size:11px; font-weight:700; color:var(--accent-ink); background:var(--accent-soft); padding:3px 9px; border-radius:20px; white-space:nowrap; }
+
+  /* solver */
+  .solverTop{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px; flex-wrap:wrap; }
+  .breadcrumb{ font-size:12.5px; color:var(--ink-soft); }
+  .problemHeader{ background:var(--paper-raised); border:1px solid var(--line); border-radius:var(--radius); padding:22px 24px; margin-bottom:22px; box-shadow:var(--shadow); text-align:center; }
+  .problemHeader .exprLine{ justify-content:center; font-size:28px; }
+  .stepProgress{ display:flex; align-items:center; gap:10px; margin-bottom:18px; }
+  .stepDots{ display:flex; gap:5px; }
+  .stepDots i{ width:7px; height:7px; border-radius:50%; background:var(--line-strong); display:block; }
+  .stepDots i.on{ background:var(--accent); }
+  .stepDots i.done{ background:var(--accent-soft); }
+  .stepCounter{ font-size:12px; color:var(--ink-soft); font-weight:600; }
+
+  .stepBody{ display:grid; grid-template-columns:1.1fr 1fr; gap:26px; align-items:start; }
+  @media (max-width:760px){ .stepBody{ grid-template-columns:1fr; } }
+  .stepCard{ background:var(--paper-raised); border:1px solid var(--line); border-radius:var(--radius); padding:24px; box-shadow:var(--shadow); min-height:220px; }
+  .stepCard h3{ font-size:16px; margin-bottom:8px; }
+  .stepCard .desc{ font-size:13.8px; color:var(--ink-soft); margin-bottom:16px; }
+  .stepCard .math{ font-size:21px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .stepCard .math .op{ color:var(--ink-soft); font-size:17px; }
+  .stepCard .math .arrow{ color:var(--ink-soft); font-size:17px; }
+  .visualCard{ background:var(--paper-raised); border:1px solid var(--line); border-radius:var(--radius); padding:24px; box-shadow:var(--shadow); min-height:220px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:12px; }
+  .visualCard figure{ margin:0; display:flex; flex-direction:column; align-items:center; gap:10px; }
+  .visualCard figcaption{ font-size:12px; color:var(--ink-soft); max-width:32ch; }
+  .visualCard .barStack{ display:flex; flex-direction:column; gap:6px; }
+  .visualCard .barPair{ display:flex; gap:18px; flex-wrap:wrap; justify-content:center; }
+  .visualCard .barUnit{ display:flex; flex-direction:column; align-items:center; gap:6px; }
+  .barModel{ display:flex; width:200px; height:34px; border:1.5px solid var(--line-strong); border-radius:6px; overflow:hidden; }
+  .barModel .seg{ flex:1; border-right:1.5px solid var(--line-strong); background:var(--paper); }
+  .barModel .seg:last-child{ border-right:none; }
+  .barModel .seg.on{ background:var(--accent); }
+  .barModel .seg.warm{ background:var(--warm); }
+  .barLabel{ font-size:11.5px; color:var(--ink-soft); }
+  .circleModel{ width:88px; height:88px; border-radius:50%; border:1.5px solid var(--line-strong); }
+  .propBar{ position:relative; width:200px; height:34px; border:1.5px solid var(--line-strong); border-radius:6px; overflow:hidden; background:var(--paper); }
+  .propBar i{ position:absolute; inset:0; width:var(--pct); background:var(--accent); display:block; }
+  .areaGrid{ display:grid; border:1.5px solid var(--line-strong); border-radius:6px; overflow:hidden; }
+  .areaGrid .cell{ border-right:1px solid var(--line); border-bottom:1px solid var(--line); background:var(--paper); }
+  .areaGrid .cell.col{ background:var(--warm-soft); }
+  .areaGrid .cell.row{ background:var(--accent-soft); }
+  .areaGrid .cell.col.row{ background:var(--accent); }
+  .noVisual{ font-size:13px; color:var(--ink-soft); }
+
+  .navRow{ display:flex; align-items:center; justify-content:space-between; margin-top:22px; gap:10px; }
+  .navRow .spacer{ flex:1; }
+
+  .doneCard{ text-align:center; padding:36px 24px; }
+  .doneCard .checkmark{ width:56px; height:56px; border-radius:50%; background:var(--accent-soft); color:var(--accent-ink); display:flex; align-items:center; justify-content:center; font-size:26px; margin:0 auto 16px; }
+  .doneCard .answer{ font-size:30px; margin:10px 0 18px; }
+  .doneCard .btnRow{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:8px; }
+
+  @media (prefers-reduced-motion: no-preference){
+    .btn, .opChip .box, .presetBtn, .tabBtn{ transition:background-color .15s ease, border-color .15s ease, color .15s ease; }
+  }
+</style>
+
+<header>
+  <div class="inner">
+    <div class="brand"><b>เศษส่วน</b><span>แอปฝึกโจทย์ทีละขั้นตอน</span></div>
+    <button class="btn ghost resetBtn" id="resetBtn" type="button">↺ เริ่มใหม่</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- SCREEN: SETUP -->
+  <section class="screen active" id="screen-setup">
+    <span class="eyebrow">ตั้งค่าโจทย์</span>
+    <h1>มาฝึกเศษส่วนกัน</h1>
+    <p class="lede">สุ่มโจทย์ตามพารามิเตอร์ที่กำหนด หรือพิมพ์โจทย์ของคุณเองเพื่อดูวิธีทำทีละขั้นตอน</p>
+
+    <div class="tabs" role="tablist">
+      <button class="tabBtn active" id="tab-auto" role="tab" aria-selected="true" aria-controls="panel-auto">สุ่มโจทย์อัตโนมัติ</button>
+      <button class="tabBtn" id="tab-manual" role="tab" aria-selected="false" aria-controls="panel-manual">พิมพ์โจทย์เอง</button>
+    </div>
+
+    <div class="tabPanel active" id="panel-auto" role="tabpanel">
+      <div class="card">
+        <div class="field">
+          <label class="groupLabel">การดำเนินการ (เลือกได้หลายข้อ)</label>
+          <div class="opGrid">
+            <label class="opChip"><input type="checkbox" name="op" value="add" checked><span class="box"><span class="sym">+</span>บวก</span></label>
+            <label class="opChip"><input type="checkbox" name="op" value="sub" checked><span class="box"><span class="sym">−</span>ลบ</span></label>
+            <label class="opChip"><input type="checkbox" name="op" value="mul" checked><span class="box"><span class="sym">×</span>คูณ</span></label>
+            <label class="opChip"><input type="checkbox" name="op" value="div" checked><span class="box"><span class="sym">÷</span>หาร</span></label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="groupLabel">ระดับความยาก</label>
+          <div class="presetRow">
+            <button type="button" class="presetBtn" data-preset="easy">ง่าย</button>
+            <button type="button" class="presetBtn" data-preset="medium">กลาง</button>
+            <button type="button" class="presetBtn" data-preset="hard">ยาก</button>
+          </div>
+          <div class="fieldNote">หรือกำหนดขอบเขตเองด้านล่าง</div>
+        </div>
+
+        <div class="field">
+          <label class="groupLabel">ขอบเขตตัวส่วน</label>
+          <div class="rangeRow">
+            <div class="numInput"><label for="denMin">ต่ำสุด</label><input type="number" id="denMin" min="1" max="99" value="2"></div>
+            <div class="numInput"><label for="denMax">สูงสุด</label><input type="number" id="denMax" min="1" max="99" value="10"></div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="groupLabel">ขอบเขตตัวเศษ</label>
+          <div class="rangeRow">
+            <div class="numInput"><label for="numMin">ต่ำสุด</label><input type="number" id="numMin" min="1" max="99" value="1"></div>
+            <div class="numInput"><label for="numMax">สูงสุด</label><input type="number" id="numMax" min="1" max="99" value="9"></div>
+          </div>
+          <div class="fieldNote">หากไม่ระบุขอบเขตเฉพาะ ระบบจะสุ่มภายในช่วงที่กำหนดไว้ด้านบน</div>
+        </div>
+
+        <div class="field">
+          <div class="checkRow"><input type="checkbox" id="allowImproper"><label for="allowImproper">อนุญาตเศษเกิน / จำนวนผสม</label></div>
+        </div>
+
+        <div class="field">
+          <label class="groupLabel" for="probCount">จำนวนโจทย์</label>
+          <div class="numInput" style="max-width:160px;"><input type="number" id="probCount" min="1" max="20" value="6"></div>
+        </div>
+
+        <div class="errBox" id="autoErr"></div>
+        <button class="btn primary" id="genBtn" type="button">สร้างโจทย์</button>
+      </div>
+    </div>
+
+    <div class="tabPanel" id="panel-manual" role="tabpanel">
+      <div class="card">
+        <p class="lede" style="margin-bottom:16px;">พิมพ์เศษส่วนในรูปแบบ <code>3/4</code>, จำนวนผสม <code>2 1/3</code>, หรือจำนวนเต็ม <code>5</code></p>
+        <div class="manualRow">
+          <input type="text" id="manualA" placeholder="เช่น 2 1/3" inputmode="text">
+          <select id="manualOp">
+            <option value="add">+</option>
+            <option value="sub">−</option>
+            <option value="mul">×</option>
+            <option value="div">÷</option>
+          </select>
+          <input type="text" id="manualB" placeholder="เช่น 4/5" inputmode="text">
+        </div>
+        <div class="errBox" id="manualErr" style="margin-top:16px;"></div>
+        <button class="btn primary" id="manualBtn" type="button" style="margin-top:18px;">แก้โจทย์</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREEN: LIST -->
+  <section class="screen" id="screen-list">
+    <span class="eyebrow">รายการโจทย์</span>
+    <h1 id="listHeading">โจทย์ของคุณ</h1>
+    <p class="lede">เลือกโจทย์ข้อใดข้อหนึ่งเพื่อดูวิธีทำทีละขั้นตอน</p>
+    <div class="probGrid" id="probGrid"></div>
+    <div style="margin-top:24px;"><button class="btn ghost" id="backToSetupBtn" type="button">← ตั้งค่าใหม่</button></div>
+  </section>
+
+  <!-- SCREEN: SOLVER -->
+  <section class="screen" id="screen-solver">
+    <div class="solverTop">
+      <span class="breadcrumb" id="breadcrumb"></span>
+      <button class="btn ghost" id="backToListBtn" type="button">← กลับไปยังรายการโจทย์</button>
+    </div>
+
+    <div class="problemHeader">
+      <div class="exprLine" id="problemExpr"></div>
+    </div>
+
+    <div id="stepsWrap">
+      <div class="stepProgress">
+        <span class="stepCounter" id="stepCounter"></span>
+        <div class="stepDots" id="stepDots"></div>
+      </div>
+      <div class="stepBody">
+        <div class="stepCard">
+          <h3 id="stepTitle"></h3>
+          <p class="desc" id="stepDesc"></p>
+          <div class="math" id="stepMath"></div>
+        </div>
+        <div class="visualCard" id="stepVisual"></div>
+      </div>
+      <div class="navRow">
+        <button class="btn" id="prevBtn" type="button">← ก่อนหน้า</button>
+        <div class="spacer"></div>
+        <button class="btn primary" id="nextBtn" type="button">ถัดไป →</button>
+      </div>
+    </div>
+
+    <div id="doneWrap" style="display:none;">
+      <div class="card doneCard">
+        <div class="checkmark">✓</div>
+        <h2>แก้โจทย์เสร็จแล้ว!</h2>
+        <div class="answer exprLine" id="finalAnswer" style="justify-content:center;"></div>
+        <div class="btnRow">
+          <button class="btn ghost" id="redoBtn" type="button">ทำโจทย์นี้อีกครั้ง</button>
+          <button class="btn" id="toListBtn" type="button">รายการโจทย์</button>
+          <button class="btn primary" id="nextProblemBtn" type="button" style="display:none;">โจทย์ถัดไป →</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ================= core math (validated) ================= */
+  function gcd(a, b) { a = Math.abs(a); b = Math.abs(b); while (b) { const t = b; b = a % b; a = t; } return a || 1; }
+  function lcm(a, b) { return Math.abs(a * b) / gcd(a, b); }
+  function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+  function needsMixedConversion(n, d) { return d > 1 && n >= d && (n % d !== 0); }
+  function mixedParts(n, d) {
+    if (d === 1) return { whole: n, rem: 0, den: 1 };
+    const whole = Math.floor(n / d);
+    return { whole, rem: n - whole * d, den: d };
+  }
+
+  function parseFracInput(str) {
+    const s = (str || '').trim();
+    if (!s) return { error: 'กรุณากรอกค่า' };
+    let m;
+    if ((m = s.match(/^(\d+)\s+(\d+)\s*\/\s*(\d+)$/))) {
+      const whole = parseInt(m[1], 10), num = parseInt(m[2], 10), den = parseInt(m[3], 10);
+      if (den === 0) return { error: 'ตัวส่วนต้องไม่เป็นศูนย์' };
+      return { n: whole * den + num, d: den };
+    }
+    if ((m = s.match(/^(\d+)\s*\/\s*(\d+)$/))) {
+      const num = parseInt(m[1], 10), den = parseInt(m[2], 10);
+      if (den === 0) return { error: 'ตัวส่วนต้องไม่เป็นศูนย์' };
+      return { n: num, d: den };
+    }
+    if ((m = s.match(/^(\d+)$/))) return { n: parseInt(m[1], 10), d: 1 };
+    return { error: 'รูปแบบไม่ถูกต้อง กรุณาใช้ เช่น 3/4 หรือ 2 1/3 หรือ 5' };
+  }
+
+  function appendMixedConversionStep(steps, f1, f2) {
+    const c1 = needsMixedConversion(f1.n, f1.d);
+    const c2 = needsMixedConversion(f2.n, f2.d);
+    if (c1 || c2) steps.push({ title: 'แปลงจำนวนผสมเป็นเศษเกิน', c1, c2, f1, f2 });
+  }
+
+  function appendSimplifyAndMixedSteps(steps, rawN, rawD) {
+    if (rawN === 0) { steps.push({ title: 'ผลลัพธ์เป็นศูนย์', n: 0, d: 1 }); return { n: 0, d: 1 }; }
+    const g = gcd(rawN, rawD);
+    let finalN = rawN, finalD = rawD;
+    if (g > 1) {
+      finalN = rawN / g; finalD = rawD / g;
+      steps.push({ title: 'ลดรูปเศษส่วน', g, rawN, rawD, finalN, finalD });
+    } else {
+      steps.push({ title: 'ตรวจสอบการลดรูป', rawN, rawD });
+    }
+    if (finalD > 1 && finalN >= finalD && finalN % finalD !== 0) {
+      steps.push({ title: 'แปลงเป็นจำนวนผสม', finalN, finalD });
+    }
+    return { n: finalN, d: finalD };
+  }
+
+  function buildAddSubSteps(op, f1, f2) {
+    const steps = [];
+    appendMixedConversionStep(steps, f1, f2);
+    const g = gcd(f1.d, f2.d);
+    const l = (f1.d * f2.d) / g;
+    steps.push({ title: 'หาตัวส่วนร่วมน้อย', d1: f1.d, d2: f2.d, g, l, f1, f2 });
+    const n1s = f1.n * (l / f1.d), n2s = f2.n * (l / f2.d);
+    steps.push({ title: 'แปลงให้มีตัวส่วนเท่ากัน', n1s, n2s, l, f1, f2 });
+    const sumN = op === 'add' ? n1s + n2s : n1s - n2s;
+    if (sumN < 0) return { error: 'ผลลัพธ์ติดลบ — โจทย์นี้แก้ไม่ได้เพราะแอปนี้รองรับเฉพาะจำนวนบวก กรุณาสลับลำดับตัวเลข' };
+    steps.push({ title: op === 'add' ? 'บวกตัวเศษ' : 'ลบตัวเศษ', n1s, n2s, sumN, l });
+    const result = appendSimplifyAndMixedSteps(steps, sumN, l);
+    return { steps, result };
+  }
+
+  function buildMulSteps(f1, f2) {
+    const steps = [];
+    appendMixedConversionStep(steps, f1, f2);
+    const prodN = f1.n * f2.n, prodD = f1.d * f2.d;
+    steps.push({ title: 'คูณเศษกับเศษ ส่วนกับส่วน', f1, f2, prodN, prodD });
+    const result = appendSimplifyAndMixedSteps(steps, prodN, prodD);
+    return { steps, result };
+  }
+
+  function buildDivSteps(f1, f2) {
+    if (f2.n === 0) return { error: 'ตัวหารต้องไม่เป็นศูนย์' };
+    const steps = [];
+    appendMixedConversionStep(steps, f1, f2);
+    const recip = { n: f2.d, d: f2.n };
+    steps.push({ title: 'หาส่วนกลับของตัวหาร', f2, recip });
+    const prodN = f1.n * recip.n, prodD = f1.d * recip.d;
+    steps.push({ title: 'คูณด้วยส่วนกลับ', f1, recip, prodN, prodD });
+    const result = appendSimplifyAndMixedSteps(steps, prodN, prodD);
+    return { steps, result };
+  }
+
+  function buildStepsFor(op, f1, f2) {
+    if (op === 'add' || op === 'sub') return buildAddSubSteps(op, f1, f2);
+    if (op === 'mul') return buildMulSteps(f1, f2);
+    if (op === 'div') return buildDivSteps(f1, f2);
+    throw new Error('unknown op');
+  }
+
+  function generateOperand(cfg) {
+    let denMin = cfg.denMin;
+    if (!cfg.allowImproper) denMin = Math.max(denMin, 2);
+    denMin = Math.min(denMin, cfg.denMax);
+    const den = randInt(denMin, cfg.denMax);
+    const low = Math.max(1, cfg.numMin);
+    const rawHigh = cfg.allowImproper ? cfg.numMax : Math.min(cfg.numMax, den - 1);
+    const high = Math.max(low, rawHigh);
+    return { n: randInt(low, high), d: den };
+  }
+  function fracValue(f) { return f.n / f.d; }
+
+  function generateProblem(cfg) {
+    const op = cfg.ops[randInt(0, cfg.ops.length - 1)];
+    let f1 = generateOperand(cfg), f2 = generateOperand(cfg);
+    if (op === 'sub' && fracValue(f1) < fracValue(f2)) { const t = f1; f1 = f2; f2 = t; }
+    if (op === 'div' && f2.n === 0) f2 = { n: 1, d: f2.d };
+    return { op, f1, f2 };
+  }
+
+  /* ================= render helpers ================= */
+  const OP_SYM = { add: '+', sub: '−', mul: '×', div: '÷' };
+
+  function fracSpan(n, d) {
+    if (d === 1) return '<span class="wholeNum">' + n + '</span>';
+    return '<span class="frac"><span class="num">' + n + '</span><span class="bar"></span><span class="den">' + d + '</span></span>';
+  }
+  function mixedDisplay(n, d) {
+    if (d === 1) return '<span class="wholeNum">' + n + '</span>';
+    const { whole, rem } = mixedParts(n, d);
+    if (whole === 0) return fracSpan(n, d);
+    if (rem === 0) return '<span class="wholeNum">' + whole + '</span>';
+    return '<span class="wholeNum">' + whole + '</span>' + fracSpan(rem, d);
+  }
+  function exprHTML(f1, op, f2) {
+    return mixedDisplay(f1.n, f1.d) + ' <span class="op">' + OP_SYM[op] + '</span> ' + mixedDisplay(f2.n, f2.d);
+  }
+  function escAttr(s) { return String(s).replace(/"/g, '&quot;'); }
+
+  function barModelHTML(n, d, label, warmTone) {
+    if (d > 20) {
+      const pct = Math.min(100, (n / d) * 100);
+      return '<div class="propBar" style="--pct:' + pct + '%" role="img" aria-label="' + escAttr(label) + '"><i></i></div>';
+    }
+    const wholeBars = Math.floor(n / d), rem = n - wholeBars * d;
+    const bars = [];
+    const count = Math.min(wholeBars, 2);
+    for (let b = 0; b < count; b++) bars.push(d);
+    if (rem > 0 || bars.length === 0) bars.push(rem);
+    return bars.map(function (filled) {
+      let segs = '';
+      for (let i = 0; i < d; i++) segs += '<div class="seg' + (i < filled ? (warmTone ? ' on warm' : ' on') : '') + '"></div>';
+      return '<div class="barModel" role="img" aria-label="' + escAttr(label) + '">' + segs + '</div>';
+    }).join('');
+  }
+  function circleOrBarHTML(n, d, label) {
+    if (d > 12 || n >= d) return barModelHTML(n, d, label, false);
+    const pct = Math.min(100, (n / d) * 100);
+    return '<div class="circleModel" role="img" aria-label="' + escAttr(label) + '" style="background:conic-gradient(var(--accent) 0 ' + pct + '%, var(--paper) 0 100%);"></div>';
+  }
+  function areaGridHTML(n1, d1, n2, d2) {
+    let cells = '';
+    for (let r = 0; r < d2; r++) {
+      for (let c = 0; c < d1; c++) {
+        const cls = (c < n1 ? ' col' : '') + (r < n2 ? ' row' : '');
+        cells += '<div class="cell' + cls + '"></div>';
+      }
+    }
+    const label = 'ตารางแสดง ' + n1 + ' ใน ' + d1 + ' ส่วน คูณกับ ' + n2 + ' ใน ' + d2 + ' ส่วน พื้นที่ทับซ้อนคือคำตอบ';
+    return '<div class="areaGrid" role="img" aria-label="' + escAttr(label) + '" style="grid-template-columns:repeat(' + d1 + ',18px); grid-template-rows:repeat(' + d2 + ',18px);">' + cells + '</div>';
+  }
+  function productVisualHTML(n1, d1, n2, d2, prodN, prodD) {
+    // the area-grid model only reads correctly when both factors are proper fractions (< 1)
+    const bothProper = n1 < d1 && n2 < d2;
+    if (bothProper && d1 * d2 <= 100) return areaGridHTML(n1, d1, n2, d2);
+    return '<div class="barPair">' +
+      '<div class="barUnit">' + barModelHTML(n1, d1, 'แถบแบ่งส่วน ' + n1 + ' ต่อ ' + d1) + '<span class="barLabel">' + fracSpan(n1, d1) + '</span></div>' +
+      '<div class="barUnit">' + barModelHTML(n2, d2, 'แถบแบ่งส่วน ' + n2 + ' ต่อ ' + d2, true) + '<span class="barLabel">' + fracSpan(n2, d2) + '</span></div>' +
+      '<div class="barUnit">' + barModelHTML(prodN, prodD, 'แถบผลคูณ ' + prodN + ' ต่อ ' + prodD) + '<span class="barLabel">' + fracSpan(prodN, prodD) + '</span></div>' +
+    '</div>';
+  }
+  function figure(inner, caption) {
+    return '<figure>' + inner + '<figcaption>' + caption + '</figcaption></figure>';
+  }
+
+  function renderMixedConversionStep(step) {
+    const lines = [];
+    if (step.c1) lines.push(mixedDisplay(step.f1.n, step.f1.d) + ' <span class="arrow">=</span> ' + fracSpan(step.f1.n, step.f1.d));
+    if (step.c2) lines.push(mixedDisplay(step.f2.n, step.f2.d) + ' <span class="arrow">=</span> ' + fracSpan(step.f2.n, step.f2.d));
+    return {
+      title: 'แปลงจำนวนผสมเป็นเศษเกิน',
+      desc: 'คูณจำนวนเต็มกับตัวส่วน แล้วบวกด้วยตัวเศษเดิม จะได้เศษเกินที่คำนวณต่อได้ง่ายขึ้น',
+      math: lines.join('<br><br>'),
+      visual: figure(
+        '<div class="barPair">' +
+          (step.c1 ? '<div class="barUnit">' + barModelHTML(step.f1.n, step.f1.d, 'แถบแบ่งส่วน ' + step.f1.n + ' ต่อ ' + step.f1.d) + '<span class="barLabel">' + mixedDisplay(step.f1.n, step.f1.d) + '</span></div>' : '') +
+          (step.c2 ? '<div class="barUnit">' + barModelHTML(step.f2.n, step.f2.d, 'แถบแบ่งส่วน ' + step.f2.n + ' ต่อ ' + step.f2.d, true) + '<span class="barLabel">' + mixedDisplay(step.f2.n, step.f2.d) + '</span></div>' : '') +
+        '</div>',
+        'ภาพเปรียบเทียบจำนวนผสมกับเศษเกินที่ค่าเท่ากัน'
+      )
+    };
+  }
+  function renderLcmStep(step) {
+    return {
+      title: 'หาตัวส่วนร่วมน้อย (ครน.)',
+      desc: 'ครน. ของ ' + step.d1 + ' และ ' + step.d2 + ' หาได้จาก ' + step.d1 + '×' + step.d2 + ' ÷ ห.ร.ม.(' + step.d1 + ',' + step.d2 + ') = ' + step.d1 + '×' + step.d2 + ' ÷ ' + step.g,
+      math: '<span class="mono">lcm(' + step.d1 + ', ' + step.d2 + ') = ' + step.l + '</span>',
+      visual: figure(
+        '<div class="barPair">' +
+          '<div class="barUnit">' + barModelHTML(step.f1.n, step.f1.d, 'แถบแบ่งส่วน ' + step.f1.n + ' ต่อ ' + step.f1.d) + '<span class="barLabel">' + fracSpan(step.f1.n, step.f1.d) + '</span></div>' +
+          '<div class="barUnit">' + barModelHTML(step.f2.n, step.f2.d, 'แถบแบ่งส่วน ' + step.f2.n + ' ต่อ ' + step.f2.d, true) + '<span class="barLabel">' + fracSpan(step.f2.n, step.f2.d) + '</span></div>' +
+        '</div>',
+        'เศษส่วนตั้งต้นทั้งสอง ก่อนแปลงให้มีตัวส่วนร่วมกัน'
+      )
+    };
+  }
+  function renderCommonDenomStep(step) {
+    return {
+      title: 'แปลงให้มีตัวส่วนเท่ากัน',
+      desc: 'คูณตัวเศษและตัวส่วนของแต่ละเศษส่วนด้วยจำนวนที่ทำให้ตัวส่วนกลายเป็น ' + step.l,
+      math: fracSpan(step.f1.n, step.f1.d) + ' <span class="arrow">=</span> ' + fracSpan(step.n1s, step.l) + '<br><br>' + fracSpan(step.f2.n, step.f2.d) + ' <span class="arrow">=</span> ' + fracSpan(step.n2s, step.l),
+      visual: figure(
+        '<div class="barPair">' +
+          '<div class="barUnit">' + barModelHTML(step.n1s, step.l, 'แถบแบ่ง ' + step.l + ' ส่วน เติมสี ' + step.n1s) + '<span class="barLabel">' + fracSpan(step.n1s, step.l) + '</span></div>' +
+          '<div class="barUnit">' + barModelHTML(step.n2s, step.l, 'แถบแบ่ง ' + step.l + ' ส่วน เติมสี ' + step.n2s, true) + '<span class="barLabel">' + fracSpan(step.n2s, step.l) + '</span></div>' +
+        '</div>',
+        'เศษส่วนทั้งสองเมื่อมีตัวส่วนเท่ากันแล้ว พร้อมนำมาบวกหรือลบ'
+      )
+    };
+  }
+  function renderAddSubStep(step) {
+    const isAdd = step.title === 'บวกตัวเศษ';
+    return {
+      title: step.title,
+      desc: (isAdd ? 'นำตัวเศษมาบวกกัน' : 'นำตัวเศษมาลบกัน') + ' โดยตัวส่วนคงเดิมที่ ' + step.l,
+      math: '<span class="mono">' + step.n1s + ' ' + (isAdd ? '+' : '−') + ' ' + step.n2s + ' = ' + step.sumN + '</span>',
+      visual: figure(
+        barModelHTML(step.sumN, step.l, 'แถบผลรวม ' + step.sumN + ' ใน ' + step.l + ' ส่วน'),
+        'ผลลัพธ์หลังบวก/ลบตัวเศษ ก่อนลดรูป'
+      )
+    };
+  }
+  function renderMulStep(step) {
+    return {
+      title: 'คูณเศษกับเศษ ส่วนกับส่วน',
+      desc: 'ในการคูณเศษส่วน ให้คูณตัวเศษทั้งสองเข้าด้วยกัน และคูณตัวส่วนทั้งสองเข้าด้วยกัน',
+      math: fracSpan(step.f1.n, step.f1.d) + ' <span class="op">×</span> ' + fracSpan(step.f2.n, step.f2.d) + ' <span class="arrow">=</span> ' + fracSpan(step.prodN, step.prodD),
+      visual: figure(productVisualHTML(step.f1.n, step.f1.d, step.f2.n, step.f2.d, step.prodN, step.prodD), 'ตารางพื้นที่หรือแถบเปรียบเทียบที่แสดงผลคูณของเศษส่วนทั้งสอง')
+    };
+  }
+  function renderReciprocalStep(step) {
+    return {
+      title: 'หาส่วนกลับของตัวหาร',
+      desc: 'สลับตัวเศษกับตัวส่วนของเศษส่วนตัวหลัง เพื่อเปลี่ยนการหารให้เป็นการคูณ',
+      math: fracSpan(step.f2.n, step.f2.d) + ' <span class="arrow">→</span> ' + fracSpan(step.recip.n, step.recip.d) + ' <span class="op">(ส่วนกลับ)</span>',
+      visual: figure(
+        '<div class="barPair">' +
+          '<div class="barUnit">' + circleOrBarHTML(step.f2.n, step.f2.d, 'วงกลม ' + step.f2.n + ' ใน ' + step.f2.d) + '<span class="barLabel">' + fracSpan(step.f2.n, step.f2.d) + '</span></div>' +
+          '<div class="barUnit">' + circleOrBarHTML(step.recip.n, step.recip.d, 'วงกลม ' + step.recip.n + ' ใน ' + step.recip.d) + '<span class="barLabel">' + fracSpan(step.recip.n, step.recip.d) + '</span></div>' +
+        '</div>',
+        'เปรียบเทียบเศษส่วนเดิมกับส่วนกลับของมัน'
+      )
+    };
+  }
+  function renderDivMulStep(step) {
+    return {
+      title: 'คูณด้วยส่วนกลับ',
+      desc: 'การหารเศษส่วน เท่ากับการคูณด้วยส่วนกลับของตัวหาร',
+      math: fracSpan(step.f1.n, step.f1.d) + ' <span class="op">×</span> ' + fracSpan(step.recip.n, step.recip.d) + ' <span class="arrow">=</span> ' + fracSpan(step.prodN, step.prodD),
+      visual: figure(productVisualHTML(step.f1.n, step.f1.d, step.recip.n, step.recip.d, step.prodN, step.prodD), 'ตารางพื้นที่หรือแถบเปรียบเทียบของการคูณด้วยส่วนกลับ')
+    };
+  }
+  function renderZeroStep() {
+    return { title: 'ผลลัพธ์เป็นศูนย์', desc: 'เมื่อเศษของผลลัพธ์เป็น 0 ค่าของเศษส่วนทั้งหมดจึงเท่ากับ 0', math: '<span class="wholeNum">0</span>', visual: figure(barModelHTML(0, 4, 'แถบว่างเปล่า แสดงค่าศูนย์'), 'ไม่มีส่วนใดถูกเติมสี เพราะผลลัพธ์คือศูนย์') };
+  }
+  function renderSimplifyStep(step) {
+    return {
+      title: 'ลดรูปเศษส่วน',
+      desc: 'หารตัวเศษและตัวส่วนด้วย ห.ร.ม. (' + step.g + ') เพื่อให้ได้เศษส่วนอย่างต่ำ',
+      math: fracSpan(step.rawN, step.rawD) + ' <span class="op">÷ ' + step.g + '</span> <span class="arrow">=</span> ' + fracSpan(step.finalN, step.finalD),
+      visual: figure(circleOrBarHTML(step.finalN, step.finalD, 'ภาพเศษส่วนหลังลดรูป ' + step.finalN + ' ใน ' + step.finalD), 'เศษส่วนภายหลังลดรูปแล้ว')
+    };
+  }
+  function renderCheckSimplifyStep(step) {
+    return {
+      title: 'ตรวจสอบการลดรูป',
+      desc: 'ห.ร.ม. ของตัวเศษและตัวส่วนเท่ากับ 1 เศษส่วนนี้เป็นเศษส่วนอย่างต่ำอยู่แล้ว',
+      math: fracSpan(step.rawN, step.rawD),
+      visual: figure(circleOrBarHTML(step.rawN, step.rawD, 'ภาพเศษส่วน ' + step.rawN + ' ใน ' + step.rawD), 'เศษส่วนนี้ลดรูปแล้วตั้งแต่ต้น')
+    };
+  }
+  function renderFinalMixedStep(step) {
+    return {
+      title: 'แปลงเป็นจำนวนผสม',
+      desc: 'เมื่อเศษมากกว่าหรือเท่ากับส่วน ให้แปลงเป็นจำนวนผสมเพื่ออ่านค่าได้ง่ายขึ้น',
+      math: fracSpan(step.finalN, step.finalD) + ' <span class="arrow">=</span> ' + mixedDisplay(step.finalN, step.finalD),
+      visual: figure(barModelHTML(step.finalN, step.finalD, 'แถบแสดง ' + step.finalN + ' ใน ' + step.finalD + ' รวมมากกว่าหนึ่งหน่วย'), 'จำนวนผสมอ่านค่าง่ายกว่าสำหรับเศษเกิน')
+    };
+  }
+
+  function renderStep(step) {
+    switch (step.title) {
+      case 'แปลงจำนวนผสมเป็นเศษเกิน': return renderMixedConversionStep(step);
+      case 'หาตัวส่วนร่วมน้อย': return renderLcmStep(step);
+      case 'แปลงให้มีตัวส่วนเท่ากัน': return renderCommonDenomStep(step);
+      case 'บวกตัวเศษ': case 'ลบตัวเศษ': return renderAddSubStep(step);
+      case 'คูณเศษกับเศษ ส่วนกับส่วน': return renderMulStep(step);
+      case 'หาส่วนกลับของตัวหาร': return renderReciprocalStep(step);
+      case 'คูณด้วยส่วนกลับ': return renderDivMulStep(step);
+      case 'ผลลัพธ์เป็นศูนย์': return renderZeroStep(step);
+      case 'ลดรูปเศษส่วน': return renderSimplifyStep(step);
+      case 'ตรวจสอบการลดรูป': return renderCheckSimplifyStep(step);
+      case 'แปลงเป็นจำนวนผสม': return renderFinalMixedStep(step);
+      default: return { title: step.title, desc: '', math: '', visual: '' };
+    }
+  }
+
+  /* ================= app state & DOM wiring ================= */
+  const $ = (id) => document.getElementById(id);
+  const screens = { setup: $('screen-setup'), list: $('screen-list'), solver: $('screen-solver') };
+  function showScreen(name) {
+    Object.keys(screens).forEach((k) => screens[k].classList.toggle('active', k === name));
+    $('resetBtn').classList.toggle('show', name !== 'setup');
+    window.scrollTo(0, 0);
+  }
+
+  const PRESETS = {
+    easy: { denMin: 2, denMax: 6, numMin: 1, numMax: 5, allowImproper: false },
+    medium: { denMin: 2, denMax: 10, numMin: 1, numMax: 9, allowImproper: false },
+    hard: { denMin: 2, denMax: 15, numMin: 1, numMax: 20, allowImproper: true }
+  };
+  document.querySelectorAll('.presetBtn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const p = PRESETS[btn.dataset.preset];
+      $('denMin').value = p.denMin; $('denMax').value = p.denMax;
+      $('numMin').value = p.numMin; $('numMax').value = p.numMax;
+      $('allowImproper').checked = p.allowImproper;
+    });
+  });
+
+  // tabs
+  $('tab-auto').addEventListener('click', () => switchTab('auto'));
+  $('tab-manual').addEventListener('click', () => switchTab('manual'));
+  function switchTab(name) {
+    $('tab-auto').classList.toggle('active', name === 'auto');
+    $('tab-manual').classList.toggle('active', name === 'manual');
+    $('tab-auto').setAttribute('aria-selected', name === 'auto');
+    $('tab-manual').setAttribute('aria-selected', name === 'manual');
+    $('panel-auto').classList.toggle('active', name === 'auto');
+    $('panel-manual').classList.toggle('active', name === 'manual');
+  }
+
+  let problems = [];
+  let activeProblemIndex = -1;
+  let activeSteps = [];
+  let activeResult = null;
+  let activeStepIndex = 0;
+  let manualMode = false;
+
+  function readAutoConfig() {
+    const ops = Array.from(document.querySelectorAll('input[name=op]:checked')).map((el) => el.value);
+    const denMin = parseInt($('denMin').value, 10) || 2;
+    const denMax = parseInt($('denMax').value, 10) || denMin;
+    const numMin = parseInt($('numMin').value, 10) || 1;
+    const numMax = parseInt($('numMax').value, 10) || numMin;
+    const allowImproper = $('allowImproper').checked;
+    const count = Math.min(20, Math.max(1, parseInt($('probCount').value, 10) || 6));
+    return { ops, denMin: Math.max(1, Math.min(denMin, denMax)), denMax: Math.max(denMin, denMax), numMin: Math.max(1, Math.min(numMin, numMax)), numMax: Math.max(numMin, numMax), allowImproper, count };
+  }
+
+  function showAutoErr(msg) { const e = $('autoErr'); e.textContent = msg; e.classList.toggle('show', !!msg); }
+  function showManualErr(msg) { const e = $('manualErr'); e.textContent = msg; e.classList.toggle('show', !!msg); }
+
+  $('genBtn').addEventListener('click', () => {
+    showAutoErr('');
+    const cfg = readAutoConfig();
+    if (cfg.ops.length === 0) { showAutoErr('กรุณาเลือกอย่างน้อยหนึ่งการดำเนินการ'); return; }
+    const list = [];
+    let attempts = 0;
+    while (list.length < cfg.count && attempts < cfg.count * 40) {
+      attempts++;
+      const p = generateProblem(cfg);
+      const built = buildStepsFor(p.op, p.f1, p.f2);
+      if (built.error) continue;
+      list.push({ op: p.op, f1: p.f1, f2: p.f2, solved: false });
+    }
+    if (list.length === 0) { showAutoErr('ไม่สามารถสร้างโจทย์ได้ด้วยค่าที่กำหนด กรุณาขยายขอบเขตตัวเลข'); return; }
+    problems = list;
+    manualMode = false;
+    renderList();
+    showScreen('list');
+  });
+
+  $('manualBtn').addEventListener('click', () => {
+    showManualErr('');
+    const a = parseFracInput($('manualA').value);
+    if (a.error) { showManualErr('ตัวเลขที่ 1: ' + a.error); return; }
+    const b = parseFracInput($('manualB').value);
+    if (b.error) { showManualErr('ตัวเลขที่ 2: ' + b.error); return; }
+    const op = $('manualOp').value;
+    const built = buildStepsFor(op, a, b);
+    if (built.error) { showManualErr(built.error); return; }
+    problems = [{ op, f1: a, f2: b, solved: false }];
+    manualMode = true;
+    openSolver(0);
+  });
+
+  function renderList() {
+    $('listHeading').textContent = 'โจทย์ของคุณ (' + problems.length + ' ข้อ)';
+    const grid = $('probGrid');
+    grid.innerHTML = '';
+    problems.forEach((p, i) => {
+      const card = document.createElement('div');
+      card.className = 'probCard';
+      card.innerHTML =
+        '<span class="idx">' + (i + 1) + '</span>' +
+        '<span class="expr">' + exprHTML(p.f1, p.op, p.f2) + '</span>' +
+        (p.solved ? '<span class="solvedBadge">แก้แล้ว ✓</span>' : '') +
+        '<button class="btn" type="button">ดูวิธีทำ</button>';
+      card.querySelector('button').addEventListener('click', () => openSolver(i));
+      grid.appendChild(card);
+    });
+  }
+
+  function openSolver(index) {
+    activeProblemIndex = index;
+    const p = problems[index];
+    const built = buildStepsFor(p.op, p.f1, p.f2);
+    activeSteps = built.steps;
+    activeResult = built.result;
+    activeStepIndex = 0;
+    $('breadcrumb').textContent = manualMode ? 'โจทย์ของคุณเอง' : ('โจทย์ที่ ' + (index + 1) + ' จาก ' + problems.length);
+    $('backToListBtn').style.display = manualMode ? 'none' : '';
+    $('problemExpr').innerHTML = exprHTML(p.f1, p.op, p.f2) + ' <span class="op">=</span> ?';
+    $('stepsWrap').style.display = '';
+    $('doneWrap').style.display = 'none';
+    renderCurrentStep();
+    showScreen('solver');
+  }
+
+  function renderCurrentStep() {
+    const total = activeSteps.length;
+    const dots = $('stepDots');
+    dots.innerHTML = '';
+    for (let i = 0; i < total; i++) {
+      const dot = document.createElement('i');
+      if (i === activeStepIndex) dot.className = 'on';
+      else if (i < activeStepIndex) dot.className = 'done';
+      dots.appendChild(dot);
+    }
+    $('stepCounter').textContent = 'ขั้นตอนที่ ' + (activeStepIndex + 1) + ' จาก ' + total;
+
+    const view = renderStep(activeSteps[activeStepIndex]);
+    $('stepTitle').textContent = view.title;
+    $('stepDesc').textContent = view.desc;
+    $('stepMath').innerHTML = view.math;
+    $('stepVisual').innerHTML = view.visual;
+
+    $('prevBtn').disabled = activeStepIndex === 0;
+    $('nextBtn').textContent = activeStepIndex === total - 1 ? 'ดูคำตอบ ✓' : 'ถัดไป →';
+  }
+
+  $('prevBtn').addEventListener('click', () => { if (activeStepIndex > 0) { activeStepIndex--; renderCurrentStep(); } });
+  $('nextBtn').addEventListener('click', () => {
+    if (activeStepIndex < activeSteps.length - 1) { activeStepIndex++; renderCurrentStep(); return; }
+    finishProblem();
+  });
+
+  function finishProblem() {
+    if (!manualMode) problems[activeProblemIndex].solved = true;
+    $('stepsWrap').style.display = 'none';
+    $('doneWrap').style.display = '';
+    $('finalAnswer').innerHTML = mixedDisplay(activeResult.n, activeResult.d);
+    const hasNext = !manualMode && activeProblemIndex < problems.length - 1;
+    $('nextProblemBtn').style.display = hasNext ? '' : 'none';
+    $('toListBtn').style.display = manualMode ? 'none' : '';
+  }
+
+  $('redoBtn').addEventListener('click', () => openSolver(activeProblemIndex));
+  $('toListBtn').addEventListener('click', () => { renderList(); showScreen('list'); });
+  $('nextProblemBtn').addEventListener('click', () => openSolver(activeProblemIndex + 1));
+  $('backToListBtn').addEventListener('click', () => { renderList(); showScreen('list'); });
+  $('backToSetupBtn').addEventListener('click', () => showScreen('setup'));
+  $('resetBtn').addEventListener('click', () => { problems = []; showScreen('setup'); });
+
+})();
+</script>
