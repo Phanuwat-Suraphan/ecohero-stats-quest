@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Rainbow Farm Isle</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+
+<div id="canvas-wrap"></div>
+<div id="unlockBanner"></div>
+<div id="levelUpBanner"></div>
+
+<div id="hud">
+  <div id="statStrip">
+    <div class="statChip">🪙 <span id="coinNum">0</span></div>
+    <div class="statChip" id="xpChip">
+      <div id="xpChipTop"><span>⭐ Lv.<span id="levelNum">1</span></span><span id="xpText">0/50</span></div>
+      <div id="xpBarTrack"><div id="xpBarFill"></div></div>
+    </div>
+    <div class="statChip">🔥 <span id="streakHudNum">0</span> วัน</div>
+  </div>
+  <div id="hudRight">
+    <button class="iconBtn" id="muteBtnFarm" onclick="toggleMute()" title="เปิด/ปิดเสียง">🔊</button>
+    <button class="iconBtn" onclick="openFriends()" title="ชาวเมือง">👥</button>
+    <button class="iconBtn" onclick="openOutfits()" title="แต่งตัวละคร">🧑‍🌾</button>
+    <button class="iconBtn" onclick="openShop()" title="ร้านค้า">🛍️</button>
+    <button class="iconBtn" onclick="openAchievements()" title="ความสำเร็จ">🏆</button>
+  </div>
+</div>
+<div id="hint">🕹️ WASD/ลูกศรเดิน หรือลากจอยสติ๊กบนมือถือ · เดินเข้าใกล้ชาวเกาะเพื่อคุย</div>
+<div id="joystickBase"><div id="joystickKnob"></div></div>
+<div id="proximityPrompt"></div>
+
+<!-- START -->
+<div class="overlay show" id="startScreen">
+  <div class="scrim"></div>
+  <div class="card">
+    <div class="eyebrow">Cozy Island Farming</div>
+    <div class="heroWrap"><span class="heroEmoji">🌈</span></div>
+    <div class="bigTitle">RAINBOW FARM ISLE</div>
+    <div class="subTitle">เกาะฟาร์มลอยฟ้าน่ารักของคุณ</div>
+
+    <div class="streakPanel">
+      <div class="streakInfo">
+        <div class="streakFlame">🔥</div>
+        <div>
+          <div class="streakCount"><span id="streakCount">0</span> วัน</div>
+          <div class="streakLabel">เข้าเล่นติดต่อกัน</div>
+        </div>
+      </div>
+      <button class="claimBtn" id="claimStreakBtn" onclick="claimDailyReward()">🎁 รับรางวัลวันนี้</button>
+    </div>
+    <div class="feedback" id="streakFeedback" style="margin-top:-8px; margin-bottom:10px;"></div>
+
+    <p class="body" style="text-align:left;">ปลูกพืชผล เก็บเกี่ยวเป็นเหรียญ ขยายเกาะ แต่งตัวละครของคุณให้น่ารัก แล้วกลับมาเยี่ยมฟาร์มทุกวันเพื่อเก็บเกี่ยวผลผลิตและรับรางวัลประจำวัน 🌱</p>
+    <div class="btnRow" style="justify-content:center; gap:10px;">
+      <button class="mainBtn" onclick="startGame()">🌈 เข้าเกาะของฉัน</button>
+    </div>
+    <div class="hubLinkRow">
+      <button class="hubLinkBtn" onclick="openAchievements()">🏆 ความสำเร็จ (<span id="achHubCount">0</span>/<span id="achHubTotal">0</span>)</button>
+      <button class="hubLinkBtn" onclick="openOutfits()">🧑‍🌾 แต่งตัวละคร</button>
+    </div>
+  </div>
+</div>
+
+<!-- ACHIEVEMENTS VIEWER -->
+<div class="overlay" id="achievementsScreen">
+  <div class="scrim"></div>
+  <div class="card" style="width:min(480px,92vw);">
+    <div class="eyebrow">Progress</div>
+    <h1 class="title">🏆 ความสำเร็จ</h1>
+    <div class="achProgress" id="achProgress">ปลดล็อกแล้ว 0/0</div>
+    <div class="achList" id="achList"></div>
+    <div class="btnRow" style="justify-content:center;">
+      <button class="mainBtn" onclick="hide('achievementsScreen')">ปิด</button>
+    </div>
+  </div>
+</div>
+
+<!-- OUTFIT PICKER -->
+<div class="overlay" id="outfitScreen">
+  <div class="scrim"></div>
+  <div class="card" style="width:min(480px,92vw); text-align:center;">
+    <div class="eyebrow">Customize</div>
+    <h1 class="title">🧑‍🌾 แต่งตัวละคร</h1>
+    <div class="tabRow">
+      <button class="tabBtn active" id="tabHat" onclick="switchOutfitTab('hat')">🎩 หมวก</button>
+      <button class="tabBtn" id="tabClothes" onclick="switchOutfitTab('clothes')">👕 เสื้อผ้า</button>
+    </div>
+    <div class="itemGrid" id="outfitGrid"></div>
+    <div class="feedback" id="outfitFeedback"></div>
+    <div class="btnRow" style="justify-content:center;">
+      <button class="mainBtn" onclick="hide('outfitScreen')">ปิด</button>
+    </div>
+  </div>
+</div>
+
+<!-- SHOP -->
+<div class="overlay" id="shopScreen">
+  <div class="scrim"></div>
+  <div class="card" style="width:min(500px,92vw);">
+    <div class="eyebrow">Shop</div>
+    <h1 class="title">🛍️ ร้านค้าฟาร์ม</h1>
+    <div class="shopSection">
+      <div class="shopSectionTitle">🌱 เมล็ดพันธุ์ใหม่</div>
+      <div id="shopSeedList"></div>
+    </div>
+    <div class="shopSection">
+      <div class="shopSectionTitle">🏝️ ขยายเกาะ</div>
+      <div id="shopExpandList"></div>
+    </div>
+    <div class="feedback" id="shopFeedback"></div>
+    <div class="btnRow" style="justify-content:center;">
+      <button class="mainBtn" onclick="hide('shopScreen')">ปิด</button>
+    </div>
+  </div>
+</div>
+
+<!-- NPC DIALOGUE -->
+<div class="overlay" id="dialogueScreen">
+  <div class="scrim" onclick="closeDialogue()"></div>
+  <div class="card" style="width:min(460px,92vw); text-align:center;">
+    <div class="npcPortrait" id="dialoguePortrait">🙂</div>
+    <div id="dialogueName">—</div>
+    <div id="dialogueRole">—</div>
+    <div class="tierBadge" id="dialogueTier">คนแปลกหน้า</div>
+    <div class="friendBarTrack" style="margin-bottom:14px;"><div class="friendBarFill" id="dialogueBar" style="width:0%;"></div></div>
+    <div id="dialogueText">—</div>
+    <div class="questBox" id="dialogueQuestBox" style="display:none;"></div>
+    <div class="dialogueActions" id="dialogueActions"></div>
+    <div class="btnRow" style="justify-content:center;">
+      <button class="mainBtn" onclick="closeDialogue()">ลาก่อน</button>
+    </div>
+  </div>
+</div>
+
+<!-- FRIENDSHIP HUB -->
+<div class="overlay" id="friendsScreen">
+  <div class="scrim"></div>
+  <div class="card" style="width:min(480px,92vw);">
+    <div class="eyebrow">Sunmeadow Isle</div>
+    <h1 class="title">👥 ชาวเกาะของคุณ</h1>
+    <p class="body">เดินเข้าไปคุยกับชาวเกาะบ่อย ๆ ช่วยเหลือ และให้ของขวัญที่พวกเขาชอบ เพื่อกระชับมิตรภาพให้แน่นแฟ้นขึ้น</p>
+    <div class="friendList" id="friendList"></div>
+    <div class="btnRow" style="justify-content:center;">
+      <button class="mainBtn" onclick="hide('friendsScreen')">ปิด</button>
+    </div>
+  </div>
+</div>
+
+<!-- FARM SCENE (docked HUD over the 3D island, not a modal) -->
+<div class="overlay" id="farmScreen">
+  <div id="farmToastWrap"></div>
+  <div id="farmFloatTextWrap"></div>
+  <div id="farmZoomControls">
+    <button class="zoomBtn" onclick="adjustFarmZoom(-6)">➕</button>
+    <button class="zoomBtn" onclick="adjustFarmZoom(6)">➖</button>
+  </div>
+  <div id="seedTray"></div>
+  <div id="dragGhost"></div>
+</div>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="js/core.js"></script>
+<script src="js/scene.js"></script>
+<script src="js/npc.js"></script>
+<script src="js/farm.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
