@@ -27,6 +27,7 @@ function checkTierUnlockAchievements(beforeId, afterId){
   const afterIdx = tierIndex(afterId);
   if(afterIdx >= tierIndex('friend')) unlockAchievement('first_friend');
   if(afterIdx >= tierIndex('family')) unlockAchievement('family_tier');
+  if(typeof act2Unlocked === 'function' && act2Unlocked()) unlockAchievement('act2_unlocked');
 }
 
 /* ============================= WORLD FLAGS (quest items / secrets) ============================= */
@@ -97,6 +98,7 @@ function isQuestReady(def){
   if(getNpcFriend(def.id).questDone) return false;
   if(q.itemFlag) return isFlagSet(q.itemFlag);
   if(q.checkFn === 'allSeedsUnlocked') return CROP_TYPES.every(c=>farmState.unlockedSeeds.includes(c.id));
+  if(q.checkFn === 'allSheepFound') return ['sheepFound1','sheepFound2','sheepFound3'].every(isFlagSet);
   return false;
 }
 const npcMeshes = {};

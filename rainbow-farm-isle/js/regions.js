@@ -241,6 +241,11 @@ function markRegionVisited(id){
 function travelTo(regionId){
   const target = REGIONS[regionId];
   if(!target || regionId === state.activeRegion) return;
+  if(target.requiresAct2 && !(typeof act2Unlocked === 'function' && act2Unlocked())){
+    SFX.bad();
+    toastFarm('🔒 ดินแดนนี้ยังไปไม่ได้นะ ลองไปทำความรู้จักและมอบของขวัญให้ชาวบ้านที่ท่าเรือ ป่า หรือหุบเขาให้สนิทกันก่อนสิ!', 'bad');
+    return;
+  }
   SFX.click();
   const current = REGIONS[state.activeRegion];
   scene.remove(current.group);
@@ -409,8 +414,7 @@ worldItemDefs.push(
   { id:'goldenegg', emoji:'🥚', x:-16, z:-12, color:0xffd166, flagKey:'goldenEggFound', secret:true, coins:60, xp:15, region:'hollow' }
 );
 
-/* ============================= BUILD ALL NPC & ITEM MESHES =============================
-   Runs here, after every region's NPCs/items (Sunmeadow's originals plus all
-   the pushes above) exist, so every def has a home group to be added to. */
-NPC_DEFS.forEach(def=>{ npcMeshes[def.id] = buildNpcMesh(def); });
-worldItemDefs.forEach(def=>{ worldItemMeshes[def.id] = buildWorldItem(def); });
+// NPC & item meshes are NOT built here anymore — regions2.js (Act 2) appends
+// even more NPC_DEFS/worldItemDefs entries after this file runs. The actual
+// deferred build loop now lives at the end of regions2.js, once every def
+// from every region (Act 1 and Act 2) exists.

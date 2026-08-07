@@ -182,7 +182,13 @@ const ACHIEVEMENTS = [
   { id:'first_secret', name:'นักสำรวจตัวจริง', desc:'ค้นพบความลับแรกของเกาะ', icon:'✨' },
   { id:'angler10', name:'นักตกปลามือฉมัง', desc:'ตกปลาที่ท่าเรือดริฟต์วูดให้ได้ครบ 10 ตัว', icon:'🎣' },
   { id:'region_explorer', name:'นักสำรวจดินแดน', desc:'ไปเยือนครบทุกดินแดนใน Everbloom', icon:'🗺️' },
-  { id:'secret_hunter', name:'นักล่าความลับ', desc:'ค้นพบความลับครบทุกชิ้นในทุกดินแดน', icon:'💎' }
+  { id:'secret_hunter', name:'นักล่าความลับ', desc:'ค้นพบความลับครบทุกชิ้นในทุกดินแดน', icon:'💎' },
+  { id:'act2_unlocked', name:'มิตรภาพเปิดโลกใหม่', desc:'สนิทกับชาวบ้านพอที่จะออกไปสำรวจดินแดนไกลออกไป', icon:'🌄' },
+  { id:'falls_angler10', name:'นักตกปลาน้ำตก', desc:'ตกปลาเรนโบว์เทราต์ที่น้ำตกอำพันครบ 10 ตัว', icon:'🐟' },
+  { id:'crystal_miner10', name:'นักขุดแร่ผลึก', desc:'ขุดแร่ผลึกในถ้ำแวววาวครบ 10 ก้อน', icon:'💠' },
+  { id:'firefly_catcher10', name:'นักจับหิ่งห้อย', desc:'จับหิ่งห้อยในหนองน้ำสนธยาครบ 10 ตัว', icon:'🪲' },
+  { id:'relic_hunter10', name:'นักขุดโบราณวัตถุ', desc:'ขุดพบโบราณวัตถุในทะเลทรายอำพันครบ 10 ชิ้น', icon:'🏺' },
+  { id:'sky_pioneer', name:'ผู้บุกเบิกท้องฟ้า', desc:'ช่วยช่างต่อเรือเหาะสร้างเรือเหาะสำเร็จ', icon:'🎈' }
 ];
 function getUnlockedAchievements(){
   try{ const l = JSON.parse(localStorage.getItem('rfi_achievements')); return Array.isArray(l) ? l : []; } catch(e){ return []; }
