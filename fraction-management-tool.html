@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เครื่องมือสร้างแผนภูมิและคำนวณเศษส่วน (แสดงวิธีทำ)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+        /* ซ่อนลูกศรใน input type number */
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col items-center py-10">
+
+    <div class="max-w-6xl w-full px-4">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-indigo-600 mb-2">เครื่องมือจัดการเศษส่วนอัจฉริยะ</h1>
+            <p class="text-slate-500">สร้างแผนภูมิ คำนวณ พร้อมแสดงวิธีทำและเปลี่ยนรูปภาพทีละขั้นตอน</p>
+        </header>
+
+        <main class="bg-white rounded-2xl shadow-xl p-6 md:p-8 mb-8 border border-slate-100">
+
+            <div class="flex border-b border-slate-200 mb-6">
+                <button id="tabSingle" onclick="setMode('single')" class="flex-1 py-3 font-bold border-b-4 border-indigo-600 text-indigo-700 transition-colors">
+                    🎨 สร้างภาพเศษส่วนเดี่ยว
+                </button>
+                <button id="tabCalc" onclick="setMode('calc')" class="flex-1 py-3 font-bold border-b-4 border-transparent text-slate-500 hover:text-indigo-500 transition-colors">
+                    🧮 คำนวณพร้อมวิธีทำ (+, -, ×, ÷)
+                </button>
+            </div>
+
+            <!-- กล่องแสดงข้อผิดพลาด -->
+            <div id="errorBox" class="hidden bg-red-50 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-r-lg shadow-sm" role="alert">
+                <p class="font-bold flex items-center gap-2"><span>⚠️</span> เกิดข้อผิดพลาด!</p>
+                <p id="errorMessage" class="text-sm mt-1"></p>
+            </div>
+
+            <div id="modeSingle" class="fade-in">
+                <div class="mb-6 text-center">
+                    <label class="block text-sm font-semibold text-slate-700 mb-3">ประเภทจำนวน:</label>
+                    <div class="flex flex-wrap justify-center gap-6">
+                        <label class="flex items-center gap-2 cursor-pointer bg-slate-50 px-4 py-2 rounded-lg border border-slate-200">
+                            <input type="radio" name="fractionType" value="simple" checked class="text-indigo-600 w-4 h-4" onchange="toggleInputs()">
+                            <span class="font-medium">เศษส่วนปกติ</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer bg-slate-50 px-4 py-2 rounded-lg border border-slate-200">
+                            <input type="radio" name="fractionType" value="mixed" class="text-indigo-600 w-4 h-4" onchange="toggleInputs()">
+                            <span class="font-medium">จำนวนคละ</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer bg-slate-50 px-4 py-2 rounded-lg border border-slate-200">
+                            <input type="radio" name="fractionType" value="whole" class="text-indigo-600 w-4 h-4" onchange="toggleInputs()">
+                            <span class="font-medium">จำนวนนับ</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 max-w-2xl mx-auto">
+                    <div id="wholeNumberGroup" class="hidden">
+                        <label id="wholeNumberLabel" class="block text-sm font-semibold text-slate-700 mb-1 text-center">จำนวนเต็ม:</label>
+                        <input type="number" id="s_w" min="0" value="1" class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-indigo-500 outline-none text-center text-2xl font-bold bg-slate-50 shadow-inner">
+                    </div>
+                    <div id="fractionPartGroup" class="contents">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-1 text-center">ตัวเศษ (บน):</label>
+                            <input type="number" id="s_n" min="0" value="3" class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-indigo-500 outline-none text-center text-2xl font-bold bg-slate-50 shadow-inner">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-1 text-center">ตัวส่วน (ล่าง):</label>
+                            <input type="number" id="s_d" min="1" value="4" class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-indigo-500 outline-none text-center text-2xl font-bold bg-slate-50 shadow-inner">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="modeCalc" class="hidden fade-in">
+                <div class="flex flex-col lg:flex-row justify-center items-center gap-6 mb-8">
+
+                    <!-- เศษส่วนที่ 1 -->
+                    <div class="bg-indigo-50/50 p-5 rounded-2xl border-2 border-indigo-100 flex items-center gap-4 w-full lg:w-auto justify-center shadow-sm relative">
+                        <span class="absolute -top-3 bg-indigo-100 text-indigo-700 text-xs font-bold px-2 py-1 rounded-md">ตัวตั้ง</span>
+                        <input type="number" id="c_w1" class="w-20 h-20 text-center text-3xl font-bold rounded-xl border-2 border-slate-200 shadow-inner focus:border-indigo-500 outline-none" placeholder="เต็ม" min="0">
+                        <div class="flex flex-col gap-2 w-20">
+                            <input type="number" id="c_n1" class="h-12 text-center text-2xl font-bold rounded-lg border-2 border-slate-200 shadow-inner focus:border-indigo-500 outline-none" placeholder="เศษ" min="0" value="1">
+                            <hr class="border-[3px] border-slate-800 rounded-full">
+                            <input type="number" id="c_d1" class="h-12 text-center text-2xl font-bold rounded-lg border-2 border-slate-200 shadow-inner focus:border-indigo-500 outline-none" placeholder="ส่วน" min="1" value="2">
+                        </div>
+                    </div>
+
+                    <!-- เครื่องหมาย -->
+                    <div class="flex-shrink-0 z-10">
+                        <select id="c_op" class="text-4xl font-black text-indigo-700 bg-white px-6 py-4 rounded-2xl border-4 border-indigo-200 cursor-pointer shadow-lg hover:border-indigo-400 hover:bg-indigo-50 outline-none transition-all">
+                            <option value="+">➕</option>
+                            <option value="-">➖</option>
+                            <option value="*">✖️</option>
+                            <option value="/">➗</option>
+                        </select>
+                    </div>
+
+                    <!-- เศษส่วนที่ 2 -->
+                    <div class="bg-indigo-50/50 p-5 rounded-2xl border-2 border-indigo-100 flex items-center gap-4 w-full lg:w-auto justify-center shadow-sm relative">
+                        <span class="absolute -top-3 bg-indigo-100 text-indigo-700 text-xs font-bold px-2 py-1 rounded-md">ตัวทำปฏิกิริยา</span>
+                        <input type="number" id="c_w2" class="w-20 h-20 text-center text-3xl font-bold rounded-xl border-2 border-slate-200 shadow-inner focus:border-indigo-500 outline-none" placeholder="เต็ม" min="0">
+                        <div class="flex flex-col gap-2 w-20">
+                            <input type="number" id="c_n2" class="h-12 text-center text-2xl font-bold rounded-lg border-2 border-slate-200 shadow-inner focus:border-indigo-500 outline-none" placeholder="เศษ" min="0" value="1">
+                            <hr class="border-[3px] border-slate-800 rounded-full">
+                            <input type="number" id="c_d2" class="h-12 text-center text-2xl font-bold rounded-lg border-2 border-slate-200 shadow-inner focus:border-indigo-500 outline-none" placeholder="ส่วน" min="1" value="3">
+                        </div>
+                    </div>
+
+                </div>
+                <p class="text-center text-sm text-slate-400 -mt-4 mb-2">💡 หากต้องการใส่ "จำนวนนับ" ล้วนๆ ให้กรอกเฉพาะช่อง "เต็ม" แล้วปล่อยเศษเป็น 0 และส่วนเป็น 1</p>
+            </div>
+
+            <div class="mb-8 bg-slate-50 p-5 rounded-xl border border-slate-200 max-w-2xl mx-auto">
+                <label class="block text-sm font-semibold text-slate-700 mb-3 text-center">เลือกรูปแบบแผนภูมิ (Shape):</label>
+                <div class="flex flex-wrap justify-center gap-3">
+                    <button type="button" class="shape-btn flex-1 py-3 px-4 rounded-xl border-2 border-indigo-500 bg-indigo-100 text-indigo-800 font-bold shadow-sm" data-shape="bar" onclick="selectShape('bar', this)">
+                        📊 แท่งยาว (Bar)
+                    </button>
+                    <button type="button" class="shape-btn flex-1 py-3 px-4 rounded-xl border-2 border-slate-200 bg-white text-slate-600 font-bold hover:bg-slate-100 transition-colors shadow-sm" data-shape="circle" onclick="selectShape('circle', this)">
+                        ⚪ วงกลม (Circle)
+                    </button>
+                    <button type="button" class="shape-btn flex-1 py-3 px-4 rounded-xl border-2 border-slate-200 bg-white text-slate-600 font-bold hover:bg-slate-100 transition-colors shadow-sm" data-shape="rectangle" onclick="selectShape('rectangle', this)">
+                        🔲 ตาราง (Grid)
+                    </button>
+                </div>
+                <input type="hidden" id="selectedShape" value="bar">
+            </div>
+
+            <button onclick="processAction()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black text-2xl py-5 px-6 rounded-2xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1">
+                🚀 ประมวลผล / แสดงผลลัพธ์
+            </button>
+        </main>
+
+        <!-- ส่วนแสดงผลลัพธ์สุดท้าย -->
+        <div id="resultContainer" class="hidden fade-in mb-8">
+            <h2 class="text-2xl font-bold text-slate-700 mb-4 text-center">ผลลัพธ์สุดท้าย</h2>
+            <div class="bg-white rounded-3xl shadow-xl p-6 md:p-10 border-2 border-indigo-50 flex flex-col items-center justify-center min-h-[250px] w-full overflow-x-auto">
+                <div id="fractionText" class="text-4xl font-bold text-slate-800 mb-8 flex flex-wrap items-center justify-center gap-4"></div>
+                <div id="chartCanvas" class="flex flex-wrap items-center justify-center gap-6 w-full pb-4"></div>
+            </div>
+
+            <!-- ปุ่มเพื่อเปิดดูวิธีทำทีละขั้นตอน (เฉพาะโหมดคำนวณ) -->
+            <div id="stepToggleContainer" class="mt-6 text-center hidden">
+                <button onclick="toggleSteps()" class="bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold py-3 px-8 rounded-full border-2 border-emerald-300 shadow-sm transition-colors text-lg flex items-center gap-2 mx-auto">
+                    <span>👣</span> ดูการเปลี่ยนแปลงอย่างละเอียด (Step-by-Step)
+                </button>
+            </div>
+        </div>
+
+        <!-- ส่วนแสดงวิธีทำทีละขั้นตอน (ซ่อนไว้ก่อน) -->
+        <div id="stepsContainer" class="hidden fade-in mb-10 bg-white rounded-3xl shadow-xl p-6 md:p-8 border border-slate-200">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4 border-b border-slate-100 pb-4">
+                <h3 class="text-2xl font-bold text-slate-700 flex items-center gap-2">
+                    <span>📝</span> ขั้นตอนการคำนวณ
+                </h3>
+                <div class="flex flex-wrap justify-center gap-2">
+                    <button onclick="prevStep()" id="btnPrevStep" class="px-5 py-2 rounded-xl font-bold bg-slate-100 text-slate-500 cursor-not-allowed">
+                        ⬅️ ก่อนหน้า
+                    </button>
+                    <button onclick="nextStep()" id="btnNextStep" class="px-5 py-2 rounded-xl font-bold bg-indigo-600 text-white hover:bg-indigo-700 transition-colors">
+                        ถัดไป ➡️
+                    </button>
+                    <button onclick="toggleShowAllSteps()" id="btnShowAllSteps" class="px-5 py-2 rounded-xl font-bold border-2 border-indigo-200 text-indigo-600 bg-white hover:bg-indigo-50 transition-colors ml-2">
+                        แสดงทั้งหมด 📜
+                    </button>
+                </div>
+            </div>
+
+            <!-- จุดที่จะแทรกขั้นตอน -->
+            <div id="stepsList" class="flex flex-col gap-10"></div>
+        </div>
+
+    </div>
+
+    <script>
+        let currentMode = 'single';
+        let currentCalculationSteps = [];
+        let currentStepDisplayIndex = 0;
+        let isShowingAllSteps = false;
+
+        const colors = {
+            fill: '#6366f1',    // indigo-500
+            empty: '#f8fafc',   // slate-50
+            stroke: '#64748b'   // slate-500
+        };
+
+        function gcd(a, b) {
+            a = Math.abs(a);
+            b = Math.abs(b);
+            while (b) {
+                let temp = b;
+                b = a % b;
+                a = temp;
+            }
+            return a;
+        }
+
+        function lcm(a, b) {
+            if (a === 0 || b === 0) return 0;
+            return Math.abs(a * b) / gcd(a, b);
+        }
+
+        function simplify(n, d) {
+            const common = gcd(n, d);
+            return { n: n / common, d: d / common };
+        }
+
+        function toMixedNumber(n, d) {
+            if (d === 0) return { w: 0, n: 0, d: 1, isNegative: false };
+            let isNegative = (n < 0) !== (d < 0);
+            n = Math.abs(n);
+            d = Math.abs(d);
+            let w = Math.floor(n / d);
+            let remN = n % d;
+            return { w, n: remN, d, isNegative };
+        }
+
+        function setMode(mode) {
+            currentMode = mode;
+            const btnSingle = document.getElementById('tabSingle');
+            const btnCalc = document.getElementById('tabCalc');
+            const modeSingle = document.getElementById('modeSingle');
+            const modeCalc = document.getElementById('modeCalc');
+
+            if (mode === 'single') {
+                btnSingle.className = "flex-1 py-3 font-bold border-b-4 border-indigo-600 text-indigo-700 transition-colors";
+                btnCalc.className = "flex-1 py-3 font-bold border-b-4 border-transparent text-slate-500 hover:text-indigo-500 transition-colors";
+                modeSingle.classList.remove('hidden');
+                modeCalc.classList.add('hidden');
+            } else {
+                btnCalc.className = "flex-1 py-3 font-bold border-b-4 border-indigo-600 text-indigo-700 transition-colors";
+                btnSingle.className = "flex-1 py-3 font-bold border-b-4 border-transparent text-slate-500 hover:text-indigo-500 transition-colors";
+                modeCalc.classList.remove('hidden');
+                modeSingle.classList.add('hidden');
+            }
+            hideError();
+            document.getElementById('resultContainer').classList.add('hidden');
+            document.getElementById('stepsContainer').classList.add('hidden');
+        }
+
+        function toggleInputs() {
+            const type = document.querySelector('input[name="fractionType"]:checked').value;
+            const wholeNumberGroup = document.getElementById('wholeNumberGroup');
+            const fractionPartGroup = document.getElementById('fractionPartGroup');
+            const wholeNumberLabel = document.getElementById('wholeNumberLabel');
+
+            if (type === 'mixed') {
+                wholeNumberGroup.classList.remove('hidden');
+                fractionPartGroup.style.display = 'contents';
+                wholeNumberLabel.innerText = 'จำนวนเต็ม:';
+            } else if (type === 'whole') {
+                wholeNumberGroup.classList.remove('hidden');
+                fractionPartGroup.style.display = 'none';
+                wholeNumberLabel.innerText = 'จำนวนนับ:';
+            } else {
+                wholeNumberGroup.classList.add('hidden');
+                fractionPartGroup.style.display = 'contents';
+            }
+        }
+
+        function selectShape(shape, buttonElement) {
+            document.getElementById('selectedShape').value = shape;
+            const buttons = document.querySelectorAll('.shape-btn');
+            buttons.forEach(btn => {
+                btn.className = "shape-btn flex-1 py-3 px-4 rounded-xl border-2 border-slate-200 bg-white text-slate-600 font-bold hover:bg-slate-100 transition-colors shadow-sm";
+            });
+            buttonElement.className = "shape-btn flex-1 py-3 px-4 rounded-xl border-2 border-indigo-500 bg-indigo-100 text-indigo-800 font-bold shadow-sm";
+        }
+
+        function showError(msg) {
+            document.getElementById('errorMessage').innerText = msg;
+            document.getElementById('errorBox').classList.remove('hidden');
+            document.getElementById('resultContainer').classList.add('hidden');
+            document.getElementById('stepsContainer').classList.add('hidden');
+        }
+
+        function hideError() {
+            document.getElementById('errorBox').classList.add('hidden');
+        }
+
+        function createCircleSVG(filled, total) {
+            const size = 120; const radius = 50; const center = size / 2;
+            const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            svg.setAttribute("viewBox", `0 0 ${size} ${size}`);
+            svg.style.width = "100px"; svg.style.height = "100px";
+            svg.classList.add("drop-shadow-sm");
+
+            const bgCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            bgCircle.setAttribute("cx", center); bgCircle.setAttribute("cy", center);
+            bgCircle.setAttribute("r", radius); bgCircle.setAttribute("fill", colors.empty);
+            bgCircle.setAttribute("stroke", colors.stroke); bgCircle.setAttribute("stroke-width", "2");
+            svg.appendChild(bgCircle);
+
+            if (total === 1 && filled === 1) {
+                bgCircle.setAttribute("fill", colors.fill);
+                return svg;
+            }
+
+            const anglePerPart = (Math.PI * 2) / total;
+            for (let i = 0; i < total; i++) {
+                const startAngle = i * anglePerPart - Math.PI / 2;
+                const endAngle = (i + 1) * anglePerPart - Math.PI / 2;
+                const x1 = center + radius * Math.cos(startAngle);
+                const y1 = center + radius * Math.sin(startAngle);
+                const x2 = center + radius * Math.cos(endAngle);
+                const y2 = center + radius * Math.sin(endAngle);
+                const largeArcFlag = anglePerPart > Math.PI ? 1 : 0;
+
+                const pathData = [`M ${center} ${center}`, `L ${x1} ${y1}`, `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`, 'Z'].join(' ');
+                const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                path.setAttribute("d", pathData);
+                path.setAttribute("fill", i < filled ? colors.fill : "transparent");
+                path.setAttribute("stroke", colors.stroke); path.setAttribute("stroke-width", "1.5");
+                svg.appendChild(path);
+            }
+            return svg;
+        }
+
+        function createRectangleSVG(filled, total) {
+            const size = 100;
+            const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            svg.setAttribute("viewBox", `0 0 ${size} ${size}`);
+            svg.style.width = "100px"; svg.style.height = "100px";
+            svg.classList.add("drop-shadow-sm");
+
+            let cols = Math.ceil(Math.sqrt(total));
+            let rows = Math.ceil(total / cols);
+            if (total === 2) { cols = 2; rows = 1; }
+            else if (total === 3) { cols = 3; rows = 1; }
+            else if (total === 6) { cols = 3; rows = 2; }
+            else if (total === 8) { cols = 4; rows = 2; }
+            else if (total === 10) { cols = 5; rows = 2; }
+            else if (total > 10 && total <= 12) { cols = 4; rows = 3; }
+
+            const cellWidth = (size - 6) / cols;
+            const cellHeight = (size - 6) / rows;
+            const padding = 3;
+
+            let count = 0;
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    if (count >= total) break;
+                    const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                    rect.setAttribute("x", padding + (c * cellWidth)); rect.setAttribute("y", padding + (r * cellHeight));
+                    rect.setAttribute("width", cellWidth); rect.setAttribute("height", cellHeight);
+                    rect.setAttribute("fill", count < filled ? colors.fill : colors.empty);
+                    rect.setAttribute("stroke", colors.stroke); rect.setAttribute("stroke-width", "1.5");
+                    svg.appendChild(rect);
+                    count++;
+                }
+            }
+            return svg;
+        }
+
+        function createBarSVG(filled, total) {
+            const width = 160; const height = 40; const padding = 2;
+            const drawWidth = width - (padding * 2); const drawHeight = height - (padding * 2);
+            const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+            svg.style.width = "160px"; svg.style.height = "40px";
+            svg.style.display = "block"; svg.style.marginBottom = "5px";
+            svg.classList.add("drop-shadow-sm");
+
+            const partWidth = drawWidth / total;
+            for (let i = 0; i < total; i++) {
+                const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                rect.setAttribute("x", padding + (i * partWidth)); rect.setAttribute("y", padding);
+                rect.setAttribute("width", partWidth); rect.setAttribute("height", drawHeight);
+                rect.setAttribute("fill", i < filled ? colors.fill : colors.empty);
+                rect.setAttribute("stroke", colors.stroke); rect.setAttribute("stroke-width", "1.5");
+                svg.appendChild(rect);
+            }
+            return svg;
+        }
+
+        function generateFractionHTML(w, n, d, isNegative = false) {
+            let html = '<div class="flex items-center text-slate-800 bg-white px-3 py-1 rounded-xl border border-slate-200 shadow-sm">';
+            if (isNegative) html += '<span class="text-4xl font-bold mr-2 text-rose-500">-</span>';
+
+            if (w > 0) {
+                html += `<span class="text-4xl font-black mr-2">${w}</span>`;
+            } else if (w === 0 && n === 0) {
+                html += `<span class="text-4xl font-black">0</span></div>`;
+                return html;
+            }
+
+            if (n > 0 || (n===0 && w===0)) { // show fraction part if needed
+                html += `<div class="flex flex-col items-center justify-center min-w-[30px]">
+                            <span class="border-b-4 border-slate-800 pb-1 px-1 w-full text-center inline-block text-2xl font-bold leading-none">${n}</span>
+                            <span class="pt-1 px-1 w-full text-center inline-block text-2xl font-bold leading-none">${d}</span>
+                         </div>`;
+            }
+            html += '</div>';
+            return html;
+        }
+
+        function renderShapesContainer(w, n, d, shape, isNegative) {
+            const container = document.createElement('div');
+            container.className = 'flex flex-wrap justify-center gap-2 items-center p-3 bg-white border border-slate-200 rounded-xl shadow-sm min-w-[120px]';
+
+            if (isNegative) {
+                const minus = document.createElement('div');
+                minus.className = 'text-5xl font-black text-rose-500 mx-1';
+                minus.innerText = '-';
+                container.appendChild(minus);
+            }
+
+            let totalFilled = (w * d) + Math.abs(n);
+            let totalNeeded = Math.ceil(totalFilled / d);
+            if (totalFilled === 0) totalNeeded = 1;
+
+            if (totalNeeded > 40) {
+                container.innerHTML = '<span class="text-orange-500 font-bold p-4 text-center">ตัวเลขสูงเกินกว่าจะวาดรูปได้ทั้งหมด<br>(แสดงเฉพาะตัวเลข)</span>';
+                return container;
+            }
+
+            let partsRemaining = totalFilled;
+            for (let i = 0; i < totalNeeded; i++) {
+                let partsToFill = Math.min(partsRemaining, d);
+                partsRemaining -= partsToFill;
+                let svg;
+                if (shape === 'circle') svg = createCircleSVG(partsToFill, d);
+                else if (shape === 'rectangle') svg = createRectangleSVG(partsToFill, d);
+                else if (shape === 'bar') svg = createBarSVG(partsToFill, d);
+                container.appendChild(svg);
+            }
+            return container;
+        }
+
+        function buildFractionBlock(w, n, d, shape, isNegative=false) {
+            const container = document.createElement('div');
+            container.className = 'flex flex-col items-center justify-center gap-4 p-4 min-w-[150px]';
+
+            const textDiv = document.createElement('div');
+            textDiv.innerHTML = generateFractionHTML(w, Math.abs(n), d, isNegative);
+            container.appendChild(textDiv);
+
+            const visualDiv = renderShapesContainer(w, Math.abs(n), d, shape, isNegative);
+            container.appendChild(visualDiv);
+
+            return container;
+        }
+
+        function buildStepDOM(title, f1, op, f2, fResult, shape, explanation = "") {
+            const stepDiv = document.createElement('div');
+            stepDiv.className = 'bg-slate-50 p-6 rounded-2xl border-2 border-indigo-100 shadow-sm fade-in w-full';
+
+            const titleEl = document.createElement('h4');
+            titleEl.className = 'text-xl font-bold text-indigo-700 mb-2 pb-2 border-b-2 border-indigo-100 inline-block';
+            titleEl.innerHTML = `📌 <span class="ml-2">${title}</span>`;
+            stepDiv.appendChild(titleEl);
+
+            if (explanation) {
+                const expEl = document.createElement('div');
+                expEl.className = 'bg-amber-50 border-l-4 border-amber-400 text-amber-900 p-3 mb-4 rounded-r-lg text-sm font-medium flex items-center gap-2 shadow-sm';
+                expEl.innerHTML = `<span>💡 อธิบายให้เห็นภาพ:</span> <span>${explanation}</span>`;
+                stepDiv.appendChild(expEl);
+            }
+
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'flex flex-col xl:flex-row items-center justify-center gap-4 xl:gap-8 w-full';
+
+            if (f1) contentDiv.appendChild(buildFractionBlock(f1.w, f1.n, f1.d, shape, f1.isNegative));
+
+            if (op) {
+                const opEl = document.createElement('div');
+                opEl.className = 'text-4xl font-black text-slate-400 bg-white w-14 h-14 flex items-center justify-center rounded-full shadow-sm';
+                opEl.innerText = op === '*' ? '×' : op === '/' ? '÷' : op;
+                contentDiv.appendChild(opEl);
+            }
+
+            if (f2) contentDiv.appendChild(buildFractionBlock(f2.w, f2.n, f2.d, shape, f2.isNegative));
+
+            if (fResult) {
+                const eqEl = document.createElement('div');
+                eqEl.className = 'text-4xl font-black text-indigo-400 bg-indigo-50 w-14 h-14 flex items-center justify-center rounded-full shadow-inner';
+                eqEl.innerText = '=';
+                contentDiv.appendChild(eqEl);
+                contentDiv.appendChild(buildFractionBlock(fResult.w, fResult.n, fResult.d, shape, fResult.isNegative));
+            }
+
+            stepDiv.appendChild(contentDiv);
+            return stepDiv;
+        }
+
+        function generateCalculationSteps(w1, n1, d1, op, w2, n2, d2, shape) {
+            let steps = [];
+            let num1 = (w1 * d1) + n1;
+            let num2 = (w2 * d2) + n2;
+
+            let i1 = {w:0, n: num1, d: d1, isNegative: false};
+            let i2 = {w:0, n: num2, d: d2, isNegative: false};
+
+            // Step 1: ถ้าเป็นจำนวนคละ ให้แปลงเป็นเศษเกินก่อน
+            if (w1 > 0 || w2 > 0) {
+                steps.push(buildStepDOM("แปลงจำนวนคละเป็นเศษเกิน", i1, op, i2, null, shape, "📦 เหมือนเรามีเค้กเต็มถาด (จำนวนเต็ม) แกะใส่รวมกับเศษที่เหลือ เพื่อให้คำนวณง่ายขึ้น"));
+            }
+
+            let resN, resD;
+
+            if (op === '+' || op === '-') {
+                let commonD = lcm(d1, d2);
+                let eq1 = {w:0, n: num1 * (commonD / d1), d: commonD, isNegative: false};
+                let eq2 = {w:0, n: num2 * (commonD / d2), d: commonD, isNegative: false};
+
+                // Step 2: ทำส่วนให้เท่ากัน (จุดที่ Bar จะถูกซอยย่อยลง)
+                if (d1 !== d2) {
+                    steps.push(buildStepDOM(`ทำตัวส่วนให้เท่ากัน (หา ค.ร.น. ของ ${d1} และ ${d2} คือ ${commonD})`, eq1, op, eq2, null, shape, `🍕 เปรียบเสมือนพิซซ่าถาดซ้ายแบ่งไว้ ${d1} ส่วน ส่วนถาดขวาแบ่งไว้ ${d2} ส่วน ขนาดชิ้นไม่เท่ากันเอามาบวกกันตรงๆ ไม่ได้! เราจึงต้องเอาแต่ละชิ้นมา **"ตัดแบ่งขีดเส้นเพิ่ม"** ให้กลายเป็น ${commonD} ส่วนเท่าๆ กันทั้งสองถาด`));
+                }
+
+                resD = commonD;
+                if (op === '+') {
+                    resN = eq1.n + eq2.n;
+                    steps.push(buildStepDOM("นำตัวเศษมาบวกกัน (ตัวส่วนคงเดิม)", eq1, op, eq2, {w:0, n:resN, d:resD, isNegative: false}, shape, `🧩 เมื่อขนาดชิ้นส่วนเท่ากันแล้ว (ส่วน ${resD} เท่ากัน) ก็นำจำนวนชิ้นที่ระบายสีมารวมกันได้เลย`));
+                } else {
+                    resN = eq1.n - eq2.n;
+                    let isNeg = resN < 0;
+                    steps.push(buildStepDOM("นำตัวเศษมาลบกัน (ตัวส่วนคงเดิม)", eq1, op, eq2, {w:0, n:Math.abs(resN), d:resD, isNegative: isNeg}, shape, "✂️ เมื่อขนาดชิ้นส่วนเท่ากันแล้ว ให้นำจำนวนชิ้นที่ระบายสีมาหักลบออก"));
+                }
+            }
+            else if (op === '*') {
+                resN = num1 * num2;
+                resD = d1 * d2;
+                steps.push(buildStepDOM("นำตัวเศษคูณเศษ และ ตัวส่วนคูณส่วน", i1, op, i2, {w:0, n:resN, d:resD, isNegative: false}, shape, "🔲 เปรียบเสมือนการซ้อนทับพื้นที่ตาราง กว้าง × ยาว เพื่อดูสัดส่วนพื้นที่ที่ทับซ้อนกันทั้งหมด"));
+            }
+            else if (op === '/') {
+                let flipped2 = {w:0, n: d2, d: num2, isNegative: false};
+                steps.push(buildStepDOM("เปลี่ยนหารเป็นคูณ และกลับเศษเป็นส่วน", i1, '*', flipped2, null, shape, "🔄 สลับเศษเป็นส่วนของตัวหาร เพื่อแปลงการหารให้เป็นการจัดกลุ่มคูณทวนกลับ"));
+
+                resN = num1 * d2;
+                resD = d1 * num2;
+                steps.push(buildStepDOM("นำตัวเศษคูณเศษ และ ตัวส่วนคูณส่วน", i1, '*', flipped2, {w:0, n:resN, d:resD, isNegative: false}, shape, "📦 คำนวณเศษคูณเศษ ส่วนคูณส่วน เพื่อหาผลลัพธ์สุดท้าย"));
+            }
+
+            // Final Step: ทำเป็นส่วนอย่างต่ำ / จำนวนคละ
+            let isFinalNeg = resN < 0;
+            let absResN = Math.abs(resN);
+            let simp = simplify(absResN, resD);
+            let finalRes = toMixedNumber(simp.n, simp.d);
+            finalRes.isNegative = isFinalNeg;
+
+            let needsFinalStep = false;
+            if (simp.n !== absResN || simp.d !== resD) needsFinalStep = true;
+            if (finalRes.w > 0) needsFinalStep = true;
+
+            if (needsFinalStep) {
+                let tempRes = {w:0, n:absResN, d:resD, isNegative: isFinalNeg};
+                steps.push(buildStepDOM(`ทำเป็นเศษส่วนอย่างต่ำ / จำนวนคละ`, tempRes, '=', finalRes, null, shape, "📦 จัดกลุ่มชิ้นส่วนย่อยที่เกินถาด ให้กลับมาเป็นจำนวนเต็ม (ถาดเต็ม) กับเศษที่เหลือ เพื่อความเรียบร้อยและอ่านง่าย"));
+            }
+
+            return steps;
+        }
+
+        function renderStepsView() {
+            const list = document.getElementById('stepsList');
+            const btnPrev = document.getElementById('btnPrevStep');
+            const btnNext = document.getElementById('btnNextStep');
+            const btnShowAll = document.getElementById('btnShowAllSteps');
+
+            list.innerHTML = '';
+
+            if (isShowingAllSteps) {
+                currentCalculationSteps.forEach(stepNode => {
+                    const clone = stepNode.cloneNode(true);
+                    clone.classList.add('fade-in');
+                    list.appendChild(clone);
+                });
+                btnPrev.classList.replace('bg-indigo-100', 'bg-slate-100');
+                btnPrev.classList.replace('text-indigo-700', 'text-slate-500');
+                btnPrev.classList.add('cursor-not-allowed', 'opacity-50');
+                btnPrev.disabled = true;
+
+                btnNext.classList.replace('bg-indigo-600', 'bg-slate-100');
+                btnNext.classList.replace('text-white', 'text-slate-500');
+                btnNext.classList.add('cursor-not-allowed', 'opacity-50');
+                btnNext.disabled = true;
+
+                btnShowAll.innerHTML = 'แสดงทีละขั้น 👣';
+                btnShowAll.classList.replace('bg-white', 'bg-indigo-50');
+            } else {
+                if(currentCalculationSteps[currentStepDisplayIndex]) {
+                    const clone = currentCalculationSteps[currentStepDisplayIndex].cloneNode(true);
+                    clone.classList.add('fade-in');
+                    list.appendChild(clone);
+                }
+
+                btnPrev.disabled = currentStepDisplayIndex === 0;
+                btnPrev.className = `px-5 py-2 rounded-xl font-bold transition-colors ${btnPrev.disabled ? 'bg-slate-100 text-slate-500 cursor-not-allowed opacity-50' : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200 shadow-sm'}`;
+
+                btnNext.disabled = currentStepDisplayIndex === currentCalculationSteps.length - 1;
+                btnNext.className = `px-5 py-2 rounded-xl font-bold transition-colors ${btnNext.disabled ? 'bg-slate-100 text-slate-500 cursor-not-allowed opacity-50' : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm'}`;
+
+                btnShowAll.innerHTML = 'แสดงทั้งหมด 📜';
+                btnShowAll.classList.replace('bg-indigo-50', 'bg-white');
+            }
+        }
+
+        function toggleSteps() {
+            document.getElementById('stepsContainer').classList.remove('hidden');
+            document.getElementById('stepToggleContainer').classList.add('hidden');
+            currentStepDisplayIndex = 0;
+            isShowingAllSteps = false;
+            renderStepsView();
+            // Scroll to steps
+            document.getElementById('stepsContainer').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function nextStep() {
+            if (!isShowingAllSteps && currentStepDisplayIndex < currentCalculationSteps.length - 1) {
+                currentStepDisplayIndex++;
+                renderStepsView();
+            }
+        }
+
+        function prevStep() {
+            if (!isShowingAllSteps && currentStepDisplayIndex > 0) {
+                currentStepDisplayIndex--;
+                renderStepsView();
+            }
+        }
+
+        function toggleShowAllSteps() {
+            isShowingAllSteps = !isShowingAllSteps;
+            if (!isShowingAllSteps) currentStepDisplayIndex = currentCalculationSteps.length - 1;
+            renderStepsView();
+        }
+
+        function processAction() {
+            hideError();
+            const shape = document.getElementById('selectedShape').value;
+            const textCanvas = document.getElementById('fractionText');
+            const visualCanvas = document.getElementById('chartCanvas');
+
+            textCanvas.innerHTML = ''; visualCanvas.innerHTML = '';
+            document.getElementById('stepsContainer').classList.add('hidden');
+            document.getElementById('stepToggleContainer').classList.add('hidden');
+
+            if (currentMode === 'single') {
+                const type = document.querySelector('input[name="fractionType"]:checked').value;
+                let w = (type === 'mixed' || type === 'whole') ? (parseInt(document.getElementById('s_w').value) || 0) : 0;
+                let n = type === 'whole' ? 0 : (parseInt(document.getElementById('s_n').value) || 0);
+                let d = type === 'whole' ? 1 : (parseInt(document.getElementById('s_d').value) || 1);
+
+                if (d <= 0) return showError("ตัวส่วนต้องมากกว่า 0");
+                if (n < 0 || w < 0) return showError("ไม่อนุญาตให้ใส่ค่าติดลบ");
+
+                textCanvas.innerHTML = generateFractionHTML(w, n, d, false);
+                visualCanvas.appendChild(renderShapesContainer(w, n, d, shape, false));
+
+            } else {
+                let w1 = parseInt(document.getElementById('c_w1').value) || 0;
+                let n1 = parseInt(document.getElementById('c_n1').value) || 0;
+                let d1 = parseInt(document.getElementById('c_d1').value) || 1;
+
+                let w2 = parseInt(document.getElementById('c_w2').value) || 0;
+                let n2 = parseInt(document.getElementById('c_n2').value) || 0;
+                let d2 = parseInt(document.getElementById('c_d2').value) || 1;
+
+                const op = document.getElementById('c_op').value;
+
+                if (d1 <= 0 || d2 <= 0) return showError("ตัวส่วนต้องมากกว่า 0 เสมอ");
+                if (w1 < 0 || n1 < 0 || w2 < 0 || n2 < 0) return showError("กรุณาใส่จำนวนที่ไม่ติดลบ");
+                if (op === '/' && (w2 * d2 + n2) === 0) return showError("ไม่สามารถหารด้วย 0 ได้");
+
+                // ประมวลผลลัพธ์สุดท้ายโชว์ทันที
+                let num1 = (w1 * d1) + n1;
+                let num2 = (w2 * d2) + n2;
+                let resN = 0, resD = 1;
+
+                if (op === '+') { resN = (num1 * d2) + (num2 * d1); resD = d1 * d2; }
+                else if (op === '-') { resN = (num1 * d2) - (num2 * d1); resD = d1 * d2; }
+                else if (op === '*') { resN = num1 * num2; resD = d1 * d2; }
+                else if (op === '/') { resN = num1 * d2; resD = d1 * num2; }
+
+                let isResultNegative = resN < 0;
+                const simplified = simplify(Math.abs(resN), resD);
+                const finalResult = toMixedNumber(simplified.n, simplified.d);
+                finalResult.isNegative = isResultNegative;
+
+                let opSymbol = op === '*' ? '×' : op === '/' ? '÷' : op;
+
+                // วาดสมการสรุป
+                const eqDiv = document.createElement('div');
+                eqDiv.className = 'flex flex-col xl:flex-row items-center justify-center gap-6 w-full';
+
+                eqDiv.appendChild(buildFractionBlock(w1, n1, d1, shape));
+
+                const opDiv = document.createElement('div');
+                opDiv.className = 'text-5xl font-black text-slate-400';
+                opDiv.innerText = opSymbol;
+                eqDiv.appendChild(opDiv);
+
+                eqDiv.appendChild(buildFractionBlock(w2, n2, d2, shape));
+
+                const equalDiv = document.createElement('div');
+                equalDiv.className = 'text-5xl font-black text-slate-400';
+                equalDiv.innerText = '=';
+                eqDiv.appendChild(equalDiv);
+
+                eqDiv.appendChild(buildFractionBlock(finalResult.w, finalResult.n, finalResult.d, shape, finalResult.isNegative));
+                visualCanvas.appendChild(eqDiv);
+
+                // สร้าง Steps รอไว้
+                currentCalculationSteps = generateCalculationSteps(w1, n1, d1, op, w2, n2, d2, shape);
+                if (currentCalculationSteps.length > 0) {
+                    document.getElementById('stepToggleContainer').classList.remove('hidden');
+                }
+            }
+
+            const resultContainer = document.getElementById('resultContainer');
+            resultContainer.classList.remove('hidden');
+            resultContainer.classList.remove('fade-in');
+            void resultContainer.offsetWidth; // trigger reflow
+            resultContainer.classList.add('fade-in');
+        }
+
+        window.onload = function() {
+            toggleInputs();
+        };
+
+    </script>
+</body>
+</html>
