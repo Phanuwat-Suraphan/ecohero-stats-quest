@@ -252,8 +252,8 @@
   .stepCard .math{ font-size:21px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
   .stepCard .math .op{ color:var(--ink-soft); font-size:17px; }
   .stepCard .math .arrow{ color:var(--ink-soft); font-size:17px; }
-  .visualCard{ background:var(--paper-raised); border:2px solid var(--line); border-radius:var(--radius); padding:24px; box-shadow:var(--shadow); min-height:220px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:12px; }
-  .visualCard figure{ margin:0; display:flex; flex-direction:column; align-items:center; gap:10px; }
+  .visualCard{ background:var(--paper-raised); border:2px solid var(--line); border-radius:var(--radius); padding:24px; box-shadow:var(--shadow); min-height:220px; min-width:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:12px; }
+  .visualCard figure{ margin:0; min-width:0; max-width:100%; display:flex; flex-direction:column; align-items:center; gap:10px; }
   .visualCard figcaption{ font-size:12px; color:var(--ink-soft); max-width:32ch; }
   .visualCard .barStack{ display:flex; flex-direction:column; gap:6px; }
   .visualCard .barPair{ display:flex; gap:18px; flex-wrap:wrap; justify-content:center; }
@@ -276,6 +276,31 @@
     @keyframes propFillLeft{ from{ left:0; } to{ left:var(--pct); } }
   }
   .noVisual{ font-size:13px; color:var(--ink-soft); font-weight:600; }
+
+  /* short-division ladder ("ตั้งหารสั้น") for finding ค.ร.น. */
+  .ladderWrap{ display:flex; flex-direction:column; align-items:center; gap:10px; max-width:100%; }
+  .ladderTableScroll{ max-width:100%; overflow-x:auto; }
+  .ladderTable{ border-collapse:collapse; margin:0 auto; }
+  .ladderTable td{ padding:5px 11px; font-weight:800; font-size:15.5px; text-align:center; color:var(--ink); font-variant-numeric:tabular-nums; }
+  @media (max-width:520px){ .ladderTable td{ padding:4px 7px; font-size:13.5px; } }
+  .ladderDivCell{ color:var(--accent-ink); border-right:2.5px solid var(--line-strong); min-width:20px; }
+  .ladderHead td:not(.ladderDivCell){ border-bottom:2.5px solid var(--line-strong); padding-bottom:7px; }
+  .ladderRow.ladderFinal td:not(.ladderDivCell){ color:var(--accent-ink); }
+  .ladderCarry{ opacity:.4; font-weight:700; }
+  .ladderNote{ font-size:12px; color:var(--ink-soft); text-align:center; max-width:34ch; }
+  .ladderFormula{ font-size:14.5px; font-weight:700; color:var(--ink); }
+  .ladderFormula b{ color:var(--accent-ink); font-size:17px; }
+  .crossCheckNote{ font-size:12px; color:var(--ink-soft); font-weight:600; margin-top:10px; font-variant-numeric:tabular-nums; }
+  @media (prefers-reduced-motion: no-preference){
+    .ladderRow{ animation:ladderRowIn .28s ease both; }
+    .ladderRow.ladderHead{ animation:none; }
+    .ladderTable tr:nth-child(2){ animation-delay:.08s; }
+    .ladderTable tr:nth-child(3){ animation-delay:.16s; }
+    .ladderTable tr:nth-child(4){ animation-delay:.24s; }
+    .ladderTable tr:nth-child(5){ animation-delay:.32s; }
+    .ladderTable tr:nth-child(6){ animation-delay:.4s; }
+    @keyframes ladderRowIn{ from{ opacity:0; transform:translateY(-4px); } to{ opacity:1; transform:translateY(0); } }
+  }
 
   /* nested subdividing bar: each segment of fraction B splits into fraction A's own pattern */
   .nestedStack{ display:flex; flex-direction:column; gap:4px; align-items:center; }
@@ -385,6 +410,13 @@
   .lessonCard.op-sub summary .opBadge{ background:var(--op-sub-soft); color:var(--op-sub-ink); }
   .lessonCard.op-mul summary .opBadge{ background:var(--op-mul-soft); color:var(--op-mul-ink); }
   .lessonCard.op-div summary .opBadge{ background:var(--op-div-soft); color:var(--op-div-ink); }
+  .lessonCard.op-lcm summary .opBadge{ background:var(--accent-soft); color:var(--accent-ink); }
+  .lessonMethodDesc{ font-size:13px; color:var(--ink-soft); line-height:1.6; margin-bottom:12px; }
+  .lessonMethodDesc b{ color:var(--ink); }
+  .factorBlock{ background:var(--paper); border:2px dashed var(--line-strong); border-radius:14px; padding:14px 16px; margin-bottom:18px; display:flex; flex-direction:column; gap:6px; }
+  .factorLine{ font-size:14.5px; font-weight:700; color:var(--ink); font-variant-numeric:tabular-nums; }
+  .factorResult{ font-size:14.5px; font-weight:800; color:var(--accent-ink); margin-top:4px; padding-top:8px; border-top:1px dashed var(--line); }
+  .factorResult b{ font-size:16px; }
   .lessonCard summary .lessonTeaser{ font-weight:600; font-size:12.5px; color:var(--ink-soft); flex:1; }
   .lessonCard summary .chev{ color:var(--ink-soft); transition:transform .15s ease; flex:0 0 auto; font-size:18px; }
   .lessonCard[open] summary .chev{ transform:rotate(90deg); }
@@ -865,6 +897,59 @@
   function gcd(a, b) { a = Math.abs(a); b = Math.abs(b); while (b) { const t = b; b = a % b; a = t; } return a || 1; }
   function lcm(a, b) { return Math.abs(a * b) / gcd(a, b); }
   function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+  function isPrime(n) {
+    if (n < 2) return false;
+    for (let i = 2; i * i <= n; i++) if (n % i === 0) return false;
+    return true;
+  }
+  // standard Thai-textbook "ตั้งหารสั้น" (short-division ladder) method for the LCM of N numbers:
+  // repeatedly divide by the smallest prime that divides at least two of the current row's
+  // numbers (numbers it doesn't divide carry straight down unchanged); stop once no prime
+  // divides two or more of them; the LCM is the product of every divisor used times the final row.
+  function lcmLadder(nums) {
+    let row = nums.slice();
+    const rows = [row.slice()];
+    const divisors = [];
+    while (true) {
+      const maxVal = Math.max.apply(null, row);
+      let chosen = null;
+      for (let p = 2; p <= maxVal; p++) {
+        if (!isPrime(p)) continue;
+        const count = row.filter((v) => v > 1 && v % p === 0).length;
+        if (count >= 2) { chosen = p; break; }
+      }
+      if (!chosen) break;
+      row = row.map((v) => (v > 1 && v % chosen === 0) ? v / chosen : v);
+      divisors.push(chosen);
+      rows.push(row.slice());
+    }
+    const lcmValue = divisors.reduce((a, b) => a * b, 1) * row.reduce((a, b) => a * b, 1);
+    return { rows, divisors, finalRow: row, lcm: lcmValue };
+  }
+  // Method 1 for the LCM lesson: prime factorization. LCM = product of each prime raised to the
+  // highest power it appears with among the numbers (the standard, unambiguous statement of the
+  // "take the repeated factors once, the rest as-is" rule taught in school).
+  function primeFactorize(n) {
+    const factors = [];
+    let x = n;
+    for (let p = 2; p * p <= x; p++) { while (x % p === 0) { factors.push(p); x /= p; } }
+    if (x > 1) factors.push(x);
+    return factors;
+  }
+  function factorizationLcm(nums) {
+    const perNumber = nums.map(primeFactorize);
+    const maxCount = {};
+    perNumber.forEach((factors) => {
+      const counts = {};
+      factors.forEach((p) => { counts[p] = (counts[p] || 0) + 1; });
+      Object.keys(counts).forEach((p) => { maxCount[p] = Math.max(maxCount[p] || 0, counts[p]); });
+    });
+    const primes = Object.keys(maxCount).map(Number).sort((a, b) => a - b);
+    const resultFactors = [];
+    primes.forEach((p) => { for (let i = 0; i < maxCount[p]; i++) resultFactors.push(p); });
+    const lcmValue = resultFactors.reduce((a, b) => a * b, 1) || 1;
+    return { perNumber, resultFactors, lcm: lcmValue };
+  }
   function needsMixedConversion(n, d) { return d > 1 && n >= d && (n % d !== 0); }
   function mixedParts(n, d) {
     if (d === 1) return { whole: n, rem: 0, den: 1 };
@@ -919,9 +1004,9 @@
   function buildAddSubSteps(op, f1, f2) {
     const steps = [];
     appendMixedConversionStep(steps, f1, f2);
-    const g = gcd(f1.d, f2.d);
-    const l = (f1.d * f2.d) / g;
-    steps.push({ title: 'หาตัวส่วนร่วมน้อย', d1: f1.d, d2: f2.d, g, l, f1, f2 });
+    const ladder = lcmLadder([f1.d, f2.d]);
+    const l = ladder.lcm;
+    steps.push({ title: 'หาตัวส่วนร่วมน้อย', d1: f1.d, d2: f2.d, ladder, l, f1, f2 });
     const n1s = f1.n * (l / f1.d), n2s = f2.n * (l / f2.d);
     steps.push({ title: 'แปลงให้มีตัวส่วนเท่ากัน', n1s, n2s, l, f1, f2 });
     const sumN = op === 'add' ? n1s + n2s : n1s - n2s;
@@ -1014,9 +1099,9 @@
   function buildCompareSteps(f1, f2) {
     const steps = [];
     appendMixedConversionStep(steps, f1, f2);
-    const g = gcd(f1.d, f2.d);
-    const l = (f1.d * f2.d) / g;
-    steps.push({ title: 'หาตัวส่วนร่วมน้อย', d1: f1.d, d2: f2.d, g, l, f1, f2 });
+    const ladder = lcmLadder([f1.d, f2.d]);
+    const l = ladder.lcm;
+    steps.push({ title: 'หาตัวส่วนร่วมน้อย', d1: f1.d, d2: f2.d, ladder, l, f1, f2 });
     const n1s = f1.n * (l / f1.d), n2s = f2.n * (l / f2.d);
     steps.push({ title: 'แปลงให้มีตัวส่วนเท่ากัน', n1s, n2s, l, f1, f2 });
     const diff = n1s - n2s;
@@ -1030,8 +1115,9 @@
     const steps = [];
     const needsConv = list.map((f) => needsMixedConversion(f.n, f.d));
     if (needsConv.some(Boolean)) steps.push({ title: 'แปลงจำนวนผสมทั้งหมด', list, needsConv });
-    const l = list.reduce((acc, f) => lcm(acc, f.d), 1);
-    steps.push({ title: 'หา ค.ร.น. ของทุกจำนวน', list, l });
+    const ladder = lcmLadder(list.map((f) => f.d));
+    const l = ladder.lcm;
+    steps.push({ title: 'หา ค.ร.น. ของทุกจำนวน', list, ladder, l });
     const converted = list.map((f) => f.n * (l / f.d));
     steps.push({ title: 'แปลงตัวส่วนทั้งหมดให้เท่ากัน', list, converted, l });
     const order = list.map((f, i) => i).sort((a, b) => ascending ? converted[a] - converted[b] : converted[b] - converted[a]);
@@ -1143,6 +1229,32 @@
     return '<figure>' + inner + '<figcaption>' + caption + '</figcaption></figure>';
   }
 
+  // renders the "ตั้งหารสั้น" (short-division ladder) method as a table: original numbers on top
+  // (underlined like the school notation), one row per divisor used, numbers that weren't
+  // divisible that round are dimmed to show they simply carried straight down.
+  function ladderTableHTML(ladder) {
+    const headCells = ladder.rows[0].map((v) => '<td>' + v + '</td>').join('');
+    let bodyRows = '';
+    for (let i = 0; i < ladder.divisors.length; i++) {
+      const prev = ladder.rows[i], cur = ladder.rows[i + 1], d = ladder.divisors[i];
+      const isFinal = i === ladder.divisors.length - 1;
+      bodyRows += '<tr class="ladderRow' + (isFinal ? ' ladderFinal' : '') + '">' +
+        '<td class="ladderDivCell">' + d + '</td>' +
+        cur.map((v, j) => '<td' + (prev[j] === v ? ' class="ladderCarry"' : '') + '>' + v + '</td>').join('') +
+      '</tr>';
+    }
+    const formulaParts = ladder.divisors.concat(ladder.finalRow.filter((v) => v !== 1));
+    const formula = (formulaParts.length ? formulaParts : [1]).join(' × ');
+    const note = ladder.divisors.length === 0
+      ? '<div class="ladderNote">ไม่มีจำนวนเฉพาะที่หารได้ตั้งแต่สองจำนวนขึ้นไป จึงคูณทุกจำนวนตรง ๆ</div>'
+      : '';
+    return '<div class="ladderWrap"><div class="ladderTableScroll"><table class="ladderTable">' +
+      '<tr class="ladderRow ladderHead"><td class="ladderDivCell"></td>' + headCells + '</tr>' +
+      bodyRows +
+      '</table></div>' + note +
+      '<div class="ladderFormula">' + formula + ' = <b>' + ladder.lcm + '</b></div></div>';
+  }
+
   // plots numbers along a line by true relative value (a float, used for layout only — never
   // for the actual answer), with rank badges in the order the caller supplies.
   function numberLineHTML(list, order) {
@@ -1219,15 +1331,12 @@
   }
   function renderLcmStep(step) {
     return {
-      title: 'หาตัวส่วนร่วมน้อย (ครน.)',
-      desc: 'ครน. ของ ' + step.d1 + ' และ ' + step.d2 + ' หาได้จาก ' + step.d1 + '×' + step.d2 + ' ÷ ห.ร.ม.(' + step.d1 + ',' + step.d2 + ') = ' + step.d1 + '×' + step.d2 + ' ÷ ' + step.g,
-      math: '<span class="mono">lcm(' + step.d1 + ', ' + step.d2 + ') = ' + step.l + '</span>',
+      title: 'หาตัวส่วนร่วมน้อย (ค.ร.น.)',
+      desc: 'ใช้วิธีตั้งหารสั้น: หารตัวส่วนทั้งสองด้วยจำนวนเฉพาะที่หารได้ลงตัว จนกว่าจะหารต่อไม่ได้ แล้วนำตัวหารกับผลลัพธ์สุดท้ายมาคูณกัน',
+      math: '<span class="mono">ค.ร.น.(' + step.d1 + ', ' + step.d2 + ') = ' + step.l + '</span>',
       visual: figure(
-        '<div class="barPair">' +
-          '<div class="barUnit">' + barModelHTML(step.f1.n, step.f1.d, 'แถบแบ่งส่วน ' + step.f1.n + ' ต่อ ' + step.f1.d) + '<span class="barLabel">' + fracSpan(step.f1.n, step.f1.d) + '</span></div>' +
-          '<div class="barUnit">' + barModelHTML(step.f2.n, step.f2.d, 'แถบแบ่งส่วน ' + step.f2.n + ' ต่อ ' + step.f2.d, true) + '<span class="barLabel">' + fracSpan(step.f2.n, step.f2.d) + '</span></div>' +
-        '</div>',
-        'เศษส่วนตั้งต้นทั้งสอง ก่อนแปลงให้มีตัวส่วนร่วมกัน'
+        ladderTableHTML(step.ladder),
+        'วิธีตั้งหารสั้น: ตัวเลขที่ไม่ถูกหารในรอบนั้นจะจางลง เพราะดึงลงมาโดยไม่เปลี่ยนแปลง'
       )
     };
   }
@@ -1247,10 +1356,12 @@
   }
   function renderCompareResultStep(step) {
     const word = { '>': 'มากกว่า', '<': 'น้อยกว่า', '=': 'เท่ากับ' }[step.relation];
+    const cross1 = step.f1.n * step.f2.d, cross2 = step.f2.n * step.f1.d;
     return {
       title: 'เปรียบเทียบตัวเศษ',
       desc: 'เมื่อตัวส่วนเท่ากันแล้ว เศษส่วนที่มีตัวเศษมากกว่าจะมีค่ามากกว่า',
-      math: fracSpan(step.f1.n, step.f1.d) + ' <span class="op">' + step.relation + '</span> ' + fracSpan(step.f2.n, step.f2.d) + ' <span class="arrow">(' + word + ')</span>',
+      math: fracSpan(step.f1.n, step.f1.d) + ' <span class="op">' + step.relation + '</span> ' + fracSpan(step.f2.n, step.f2.d) + ' <span class="arrow">(' + word + ')</span>' +
+        '<div class="crossCheckNote">ตรวจไวได้อีกวิธีด้วยการคูณไขว้: ' + step.f1.n + '×' + step.f2.d + ' ' + step.relation + ' ' + step.f2.n + '×' + step.f1.d + '&nbsp; → &nbsp;' + cross1 + ' ' + step.relation + ' ' + cross2 + '</div>',
       visual: figure(
         '<div class="barPair">' +
           '<div class="barUnit">' + barModelHTML(step.n1s, step.l, 'แถบ ' + step.n1s + ' ใน ' + step.l) + '<span class="barLabel">' + fracSpan(step.f1.n, step.f1.d) + '</span></div>' +
@@ -1275,9 +1386,12 @@
   function renderOrderLcmStep(step) {
     return {
       title: 'หา ค.ร.น. ของทุกจำนวน',
-      desc: 'หาตัวคูณร่วมน้อยของตัวส่วนทั้ง ' + step.list.length + ' จำนวน เพื่อใช้เป็นตัวส่วนร่วมเดียวกัน',
+      desc: 'ใช้วิธีตั้งหารสั้นกับตัวส่วนทั้ง ' + step.list.length + ' จำนวนพร้อมกัน: หารด้วยจำนวนเฉพาะที่หารได้ลงตัวอย่างน้อยสองจำนวน ตัวที่หารไม่ได้ให้ดึงลงมาเหมือนเดิม',
       math: '<span class="mono">ค.ร.น.(' + step.list.map(function (f) { return f.d; }).join(', ') + ') = ' + step.l + '</span>',
-      visual: ''
+      visual: figure(
+        ladderTableHTML(step.ladder),
+        'วิธีตั้งหารสั้นสำหรับหลายจำนวน: ตัวเลขที่ไม่ถูกหารในรอบนั้นจะจางลง'
+      )
     };
   }
   function renderOrderConvertAllStep(step) {
@@ -1496,16 +1610,45 @@
     '</div>';
   }
 
+  function lcmLessonCardHTML() {
+    const fa = 12, fb = 18; // factorization method example
+    const factored = factorizationLcm([fa, fb]);
+    const factorLine = (n, factors) => n + ' = ' + factors.join(' × ');
+    const resultLine = factored.resultFactors.join(' × ') + ' = <b>' + factored.lcm + '</b>';
+    const ladder = lcmLadder([12, 18, 20]); // division-ladder example, generalized to 3 numbers
+    const details = document.createElement('details');
+    details.className = 'lessonCard op-lcm';
+    details.open = true;
+    details.innerHTML =
+      '<summary><span class="opBadge">🪜</span><span>วิธีหา ค.ร.น. (ตัวคูณร่วมน้อย)</span><span class="lessonTeaser">แยกตัวประกอบ หรือ ตั้งหารสั้น — สองวิธีที่โรงเรียนสอน</span><span class="chev">›</span></summary>' +
+      '<div class="lessonBody">' +
+        '<div class="lessonRule"><b>ค.ร.น. คืออะไร</b>ค.ร.น. (ตัวคูณร่วมน้อย) คือจำนวนที่น้อยที่สุดที่จำนวนนับตั้งแต่สองจำนวนขึ้นไปหารลงตัวพอดีทุกตัว ใช้เป็นตัวส่วนร่วมตอนบวก ลบ เปรียบเทียบ หรือเรียงลำดับเศษส่วนที่มีตัวส่วนไม่เท่ากัน</div>' +
+        '<div class="lessonExampleLabel">วิธีที่ 1: แยกตัวประกอบ</div>' +
+        '<p class="lessonMethodDesc">แยกแต่ละจำนวนเป็นผลคูณของจำนวนเฉพาะ แล้วเลือกจำนวนเฉพาะแต่ละตัวโดยใช้จำนวนครั้งที่ปรากฏ<b>มากที่สุด</b>จากทุกจำนวน นำมาคูณกันทั้งหมด</p>' +
+        '<div class="factorBlock">' +
+          '<div class="factorLine">' + factorLine(fa, factored.perNumber[0]) + '</div>' +
+          '<div class="factorLine">' + factorLine(fb, factored.perNumber[1]) + '</div>' +
+          '<div class="factorResult">ค.ร.น. = ' + resultLine + '</div>' +
+        '</div>' +
+        '<div class="lessonExampleLabel">วิธีที่ 2: ตั้งหารสั้น</div>' +
+        '<p class="lessonMethodDesc">หารทุกจำนวนพร้อมกันด้วยจำนวนเฉพาะที่หารได้ลงตัว<b>อย่างน้อยสองจำนวน</b> ตัวที่หารไม่ลงตัวให้ดึงลงมาเหมือนเดิม ทำซ้ำจนกว่าจะหารต่อไม่ได้ แล้วนำตัวหารทั้งหมดกับผลลัพธ์แถวสุดท้ายมาคูณกัน วิธีนี้ใช้ได้กับตัวเลขกี่จำนวนก็ได้ (แอปนี้ใช้วิธีนี้ตอนหาค.ร.น. ของโจทย์เรียงลำดับที่มีได้ถึง 10 จำนวน)</p>' +
+        figure(ladderTableHTML(ladder), 'ตัวอย่าง: หา ค.ร.น. ของ 12, 18 และ 20') +
+        '<div class="lessonWarn"><b>ข้อควรระวัง</b>ตัวหารแต่ละแถวของวิธีตั้งหารสั้นต้องเป็น<b>จำนวนเฉพาะ</b> (2, 3, 5, 7, ...) เท่านั้น และต้องหารจำนวนในแถวได้ลงตัวอย่างน้อย 2 จำนวนเสมอ ถ้าหารได้แค่จำนวนเดียวห้ามใช้เป็นตัวหาร</div>' +
+        '<div class="lessonFooter"><button class="btn primary" type="button" data-practice-op="add">ลองฝึกโจทย์ที่ต้องหา ค.ร.น. เลย →</button></div>' +
+      '</div>';
+    return details;
+  }
+
   function renderLessonExamples() {
     const grid = $('lessonGrid');
     grid.innerHTML = '';
+    grid.appendChild(lcmLessonCardHTML());
     LESSON_DATA.forEach((lesson, i) => {
       const built = buildStepsFor(lesson.op, lesson.example.f1, lesson.example.f2);
       const stepsHTML = built.steps.map((s, idx) => lessonStepHTML(idx, renderStep(s))).join('');
       const exprText = exprHTML(lesson.example.f1, lesson.op, lesson.example.f2) + ' <span class="op">=</span> ' + mixedDisplay(built.result.n, built.result.d);
       const details = document.createElement('details');
       details.className = 'lessonCard op-' + lesson.op;
-      if (i === 0) details.open = true;
       details.innerHTML =
         '<summary><span class="opBadge">' + lesson.icon + '</span><span>' + lesson.title + '</span><span class="lessonTeaser">' + lesson.teaser + '</span><span class="chev">›</span></summary>' +
         '<div class="lessonBody">' +
