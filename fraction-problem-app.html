@@ -150,6 +150,47 @@
   .checkRow label{ font-size:14px; font-weight:700; }
   .fieldNote{ font-size:12.3px; color:var(--ink-soft); margin-top:6px; font-weight:600; }
   .errBox{ background:var(--danger-soft); color:var(--danger); border-radius:12px; padding:12px 14px; font-size:13.5px; margin-bottom:16px; display:none; font-weight:700; }
+
+  /* problem-type selector */
+  .ptypeRow{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+  @media (max-width:560px){ .ptypeRow{ grid-template-columns:1fr; } }
+  .ptypeBtn{ display:flex; flex-direction:column; align-items:center; gap:5px; padding:14px 10px; border-radius:14px; border:2.5px solid var(--line-strong); background:var(--paper-raised); cursor:pointer; font-family:var(--font-body); }
+  .ptypeIcon{ width:34px; height:34px; }
+  .ptypeBtn b{ font-size:14px; font-weight:800; color:var(--ink); }
+  .ptypeBtn span{ font-size:11.5px; color:var(--ink-soft); font-weight:700; }
+  .ptypeBtn.active{ border-color:var(--accent); background:var(--accent-soft); }
+  .ptypeBtn.active b{ color:var(--accent-ink); }
+
+  /* compare mode: pick < = > */
+  .compareRow{ display:flex; align-items:center; justify-content:center; gap:18px; flex-wrap:wrap; margin:6px 0 4px; }
+  .compareExpr{ font-size:26px; }
+  .relBtnRow{ display:flex; gap:10px; }
+  .relBtn{ width:56px; height:56px; border-radius:16px; border:2.5px solid var(--line-strong); background:var(--paper-raised); color:var(--ink); font-size:26px; font-weight:800; cursor:pointer; font-family:var(--font-body); }
+  .relBtn:hover{ border-color:var(--accent); transform:translateY(-2px); }
+  .relBtn:active{ transform:translateY(0) scale(.94); }
+  .relBtn.picked.correct{ border-color:var(--accent); background:var(--accent-soft); color:var(--accent-ink); }
+  .relBtn.picked.incorrect{ border-color:var(--danger); background:var(--danger-soft); color:var(--danger); }
+  @media (prefers-reduced-motion: reduce){ .relBtn:hover, .relBtn:active{ transform:none; } }
+
+  /* order mode: click chips into a sequence */
+  .orderHint{ font-size:13px; color:var(--ink-soft); font-weight:700; margin-bottom:12px; text-align:center; }
+  .orderSequence{ display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-bottom:16px; min-height:52px; }
+  .orderSlot{ display:flex; align-items:center; gap:6px; min-width:56px; height:48px; padding:0 12px; border-radius:14px; border:2.5px dashed var(--line-strong); font-size:16px; font-weight:800; color:var(--ink-soft); background:var(--paper); }
+  .orderSlot.filled{ border-style:solid; border-color:var(--accent); background:var(--accent-soft); color:var(--ink); cursor:pointer; }
+  .orderSlot .orderSlotNum{ font-size:10.5px; font-weight:800; color:var(--accent-ink); background:var(--paper-raised); width:18px; height:18px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex:0 0 auto; }
+  .orderPool{ display:flex; flex-wrap:wrap; gap:10px; justify-content:center; padding-top:14px; border-top:2px dashed var(--line); }
+  .orderChip{ padding:10px 16px; border-radius:14px; border:2.5px solid var(--line-strong); background:var(--paper-raised); color:var(--ink); font-size:16px; font-weight:800; cursor:pointer; font-family:var(--font-body); }
+  .orderChip:hover{ border-color:var(--accent); transform:translateY(-2px); }
+  .orderChip:active{ transform:translateY(0) scale(.95); }
+  @media (prefers-reduced-motion: reduce){ .orderChip:hover, .orderChip:active{ transform:none; } }
+  @media (prefers-reduced-motion: no-preference){ .orderSlot.filled{ animation:chipPop .22s cubic-bezier(.34,1.56,.64,1); } }
+
+  /* number line for the order-result step and final summary */
+  .numberLineWrap{ padding:26px 10px 10px; width:100%; }
+  .numberLine{ position:relative; height:2px; background:var(--line-strong); border-radius:2px; margin:34px 18px; }
+  .nlDot{ position:absolute; top:50%; transform:translate(-50%,-50%); display:flex; flex-direction:column; align-items:center; gap:5px; }
+  .nlLabel{ font-size:11.5px; font-weight:800; white-space:nowrap; color:var(--ink); background:var(--paper-raised); padding:1px 6px; border-radius:6px; }
+  .nlMarker{ width:24px; height:24px; border-radius:50%; background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; border:2.5px solid var(--paper-raised); box-shadow:var(--shadow); }
   .errBox.show{ display:block; }
 
   .manualRow{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
@@ -180,6 +221,8 @@
   .probCard.op-sub{ border-left:6px solid var(--op-sub); }
   .probCard.op-mul{ border-left:6px solid var(--op-mul); }
   .probCard.op-div{ border-left:6px solid var(--op-div); }
+  .probCard.op-compare{ border-left:6px solid var(--accent); }
+  .probCard.op-order{ border-left:6px solid var(--warm); }
   .probCard .idx{ font-size:11.5px; color:var(--ink-soft); font-weight:800; flex:0 0 26px; }
   .probCard .expr{ flex:1 1 auto; font-size:19px; display:flex; align-items:center; gap:2px; }
   .probCard .solvedBadge{ font-size:11px; font-weight:800; color:var(--accent-ink); background:var(--accent-soft); padding:4px 10px; border-radius:20px; white-space:nowrap; }
@@ -201,6 +244,7 @@
   .stepCounter{ font-size:12px; color:var(--ink-soft); font-weight:800; }
 
   .stepBody{ display:grid; grid-template-columns:1.1fr 1fr; gap:26px; align-items:start; }
+  .stepBody.noVisualStep{ grid-template-columns:1fr; }
   @media (max-width:760px){ .stepBody{ grid-template-columns:1fr; } }
   .stepCard{ background:var(--paper-raised); border:2px solid var(--line); border-radius:var(--radius); padding:24px; box-shadow:var(--shadow); min-height:220px; }
   .stepCard h3{ font-size:16px; margin-bottom:8px; }
@@ -455,6 +499,24 @@
     <div class="tabPanel active" id="panel-auto" role="tabpanel">
       <div class="card">
         <div class="field">
+          <label class="groupLabel">ชนิดโจทย์</label>
+          <div class="ptypeRow">
+            <button type="button" class="ptypeBtn active" data-ptype="compute">
+              <svg class="ptypeIcon" viewBox="0 0 32 32" aria-hidden="true"><rect x="4" y="3" width="24" height="26" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="2"/><rect x="8" y="7" width="16" height="6" rx="2" fill="var(--accent)"/><circle cx="10.5" cy="19" r="2" fill="var(--op-add)"/><circle cx="16" cy="19" r="2" fill="var(--op-sub)"/><circle cx="21.5" cy="19" r="2" fill="var(--op-mul)"/><circle cx="10.5" cy="24.5" r="2" fill="var(--op-div)"/><circle cx="16" cy="24.5" r="2" fill="var(--accent)"/><circle cx="21.5" cy="24.5" r="2" fill="var(--warm)"/></svg>
+              <b>คำนวณ</b><span>+ − × ÷</span>
+            </button>
+            <button type="button" class="ptypeBtn" data-ptype="compare">
+              <svg class="ptypeIcon" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 4 V24" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"/><path d="M6 9 H26" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"/><path d="M6 9 L2.5 17 A4 4 0 0 0 9.5 17 Z" fill="var(--op-add-soft)" stroke="var(--op-add)" stroke-width="2" stroke-linejoin="round"/><path d="M26 9 L22 15.5 A4.5 4.5 0 0 0 30 15.5 Z" fill="var(--op-sub-soft)" stroke="var(--op-sub)" stroke-width="2" stroke-linejoin="round"/><rect x="10" y="25" width="12" height="3" rx="1.5" fill="var(--accent)"/></svg>
+              <b>เปรียบเทียบ</b><span>&lt; = &gt;</span>
+            </button>
+            <button type="button" class="ptypeBtn" data-ptype="order">
+              <svg class="ptypeIcon" viewBox="0 0 32 32" aria-hidden="true"><rect x="4" y="19" width="5" height="9" rx="1.5" fill="var(--op-div)"/><rect x="11.5" y="14" width="5" height="14" rx="1.5" fill="var(--warm)"/><rect x="19" y="9" width="5" height="19" rx="1.5" fill="var(--op-add)"/><rect x="26.5" y="3" width="5" height="25" rx="1.5" fill="var(--accent)"/></svg>
+              <b>เรียงลำดับ</b><span>สูงสุด 10 จำนวน</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="field" id="computeOnlyFields">
           <label class="groupLabel">การดำเนินการ (เลือกได้หลายข้อ)</label>
           <div class="opGrid">
             <label class="opChip op-add"><input type="checkbox" name="op" value="add" checked><span class="box"><span class="sym">+</span>บวก</span></label>
@@ -493,6 +555,17 @@
 
         <div class="field">
           <div class="checkRow"><input type="checkbox" id="allowImproper"><label for="allowImproper">อนุญาตเศษเกิน / จำนวนผสม</label></div>
+        </div>
+
+        <div class="field" id="orderOnlyFields" style="display:none;">
+          <label class="groupLabel" for="orderCount">จำนวนตัวเลขต่อโจทย์ (3–10)</label>
+          <div class="numInput" style="max-width:160px; margin-bottom:14px;"><input type="number" id="orderCount" min="3" max="10" value="5"></div>
+          <label class="groupLabel" for="orderDirection">ทิศทางการเรียง</label>
+          <select id="orderDirection" style="border:2px solid var(--line-strong); border-radius:12px; padding:10px 12px; background:var(--paper); color:var(--ink); font-weight:700; font-size:14px;">
+            <option value="asc">จากน้อยไปมาก</option>
+            <option value="desc">จากมากไปน้อย</option>
+            <option value="random">สุ่มทิศทาง</option>
+          </select>
         </div>
 
         <div class="field">
@@ -635,9 +708,10 @@
           </svg>
           <div class="speechBubble" id="answerSpeech">ลองตอบดูสิ เธอทำได้แน่นอน!</div>
         </div>
-        <h3>ลองคิดคำตอบเองก่อนดูวิธีทำ</h3>
-        <p class="hint">ใส่ตัวเลขลงในแต่ละช่อง แล้วกดตรวจคำตอบ</p>
-        <div class="answerRow">
+        <h3 id="answerHeading">ลองคิดคำตอบเองก่อนดูวิธีทำ</h3>
+        <p class="hint" id="answerHint">ใส่ตัวเลขลงในแต่ละช่อง แล้วกดตรวจคำตอบ</p>
+
+        <div class="answerRow" id="computeAnswerRow">
           <div class="fracWidget" id="answerWidget">
             <input type="number" class="fiBox fiWhole" min="0" inputmode="numeric" placeholder="0" aria-label="จำนวนเต็มของคำตอบ">
             <div class="fiFrac">
@@ -648,6 +722,27 @@
           </div>
           <button class="btn primary" id="checkAnswerBtn" type="button">ตรวจคำตอบ</button>
         </div>
+
+        <div class="compareRow" id="compareAnswerRow" style="display:none;">
+          <div class="compareExpr" id="compareExprA"></div>
+          <div class="relBtnRow" id="relBtnRow">
+            <button class="relBtn" type="button" data-rel="<">&lt;</button>
+            <button class="relBtn" type="button" data-rel="=">=</button>
+            <button class="relBtn" type="button" data-rel=">">&gt;</button>
+          </div>
+          <div class="compareExpr" id="compareExprB"></div>
+        </div>
+
+        <div id="orderAnswerRow" style="display:none;">
+          <div class="orderHint" id="orderDirHint"></div>
+          <div class="orderSequence" id="orderSequence"></div>
+          <div class="orderPool" id="orderPool"></div>
+          <div class="answerActions" style="margin-top:14px;">
+            <button class="btn ghost" id="orderResetBtn" type="button">↺ รีเซ็ตลำดับ</button>
+            <button class="btn primary" id="orderCheckBtn" type="button">ตรวจคำตอบ</button>
+          </div>
+        </div>
+
         <div class="answerFeedback" id="answerFeedback"></div>
         <div class="answerActions" id="answerActions">
           <button class="btn ghost" id="skipToStepsBtn" type="button">ข้ามไปดูวิธีทำ →</button>
@@ -660,7 +755,7 @@
         <span class="stepCounter" id="stepCounter"></span>
         <div class="stepDots" id="stepDots"></div>
       </div>
-      <div class="stepBody">
+      <div class="stepBody" id="stepBody">
         <div class="stepCard">
           <h3 id="stepTitle"></h3>
           <p class="desc" id="stepDesc"></p>
@@ -862,6 +957,55 @@
     return { op, f1, f2 };
   }
 
+  function generateCompareProblem(cfg) {
+    return { f1: generateOperand(cfg), f2: generateOperand(cfg) };
+  }
+
+  // generates `count` numbers with distinct values (no ties), or null if it can't within the budget
+  function generateDistinctList(cfg, count) {
+    const list = [];
+    const seenValues = [];
+    let attempts = 0;
+    while (list.length < count && attempts < count * 60) {
+      attempts++;
+      const f = generateOperand(cfg);
+      const val = fracValue(f);
+      if (seenValues.some((v) => Math.abs(v - val) < 1e-9)) continue;
+      seenValues.push(val);
+      list.push(f);
+    }
+    return list.length === count ? list : null;
+  }
+
+  /* ---- compare: reuses appendMixedConversionStep / the lcm & common-denom steps from add-sub ---- */
+  function buildCompareSteps(f1, f2) {
+    const steps = [];
+    appendMixedConversionStep(steps, f1, f2);
+    const g = gcd(f1.d, f2.d);
+    const l = (f1.d * f2.d) / g;
+    steps.push({ title: 'หาตัวส่วนร่วมน้อย', d1: f1.d, d2: f2.d, g, l, f1, f2 });
+    const n1s = f1.n * (l / f1.d), n2s = f2.n * (l / f2.d);
+    steps.push({ title: 'แปลงให้มีตัวส่วนเท่ากัน', n1s, n2s, l, f1, f2 });
+    const diff = n1s - n2s;
+    const relation = diff > 0 ? '>' : (diff < 0 ? '<' : '=');
+    steps.push({ title: 'เปรียบเทียบตัวเศษ', n1s, n2s, l, relation, f1, f2 });
+    return { steps, relation };
+  }
+
+  /* ---- order: up to 10 numbers, compared via one shared common denominator ---- */
+  function buildOrderSteps(list, ascending) {
+    const steps = [];
+    const needsConv = list.map((f) => needsMixedConversion(f.n, f.d));
+    if (needsConv.some(Boolean)) steps.push({ title: 'แปลงจำนวนผสมทั้งหมด', list, needsConv });
+    const l = list.reduce((acc, f) => lcm(acc, f.d), 1);
+    steps.push({ title: 'หา ค.ร.น. ของทุกจำนวน', list, l });
+    const converted = list.map((f) => f.n * (l / f.d));
+    steps.push({ title: 'แปลงตัวส่วนทั้งหมดให้เท่ากัน', list, converted, l });
+    const order = list.map((f, i) => i).sort((a, b) => ascending ? converted[a] - converted[b] : converted[b] - converted[a]);
+    steps.push({ title: 'เรียงลำดับผลลัพธ์', list, order, ascending, l, converted });
+    return { steps, order };
+  }
+
   /* ================= render helpers ================= */
   const OP_SYM = { add: '+', sub: '−', mul: '×', div: '÷' };
 
@@ -966,6 +1110,63 @@
     return '<figure>' + inner + '<figcaption>' + caption + '</figcaption></figure>';
   }
 
+  // plots numbers along a line by true relative value (a float, used for layout only — never
+  // for the actual answer), with rank badges in the order the caller supplies.
+  function numberLineHTML(list, order) {
+    const values = list.map((f) => f.n / f.d);
+    const min = Math.min.apply(null, values), max = Math.max.apply(null, values);
+    const span = (max - min) || 1;
+    const pad = span * 0.14;
+    const domainMin = min - pad, domainMax = max + pad;
+    const dots = order.map(function (idx, rank) {
+      const val = values[idx];
+      const pct = ((val - domainMin) / (domainMax - domainMin)) * 100;
+      const f = list[idx];
+      return '<div class="nlDot" style="left:' + pct.toFixed(2) + '%;">' +
+        '<div class="nlLabel">' + mixedDisplay(f.n, f.d) + '</div>' +
+        '<div class="nlMarker">' + (rank + 1) + '</div>' +
+      '</div>';
+    }).join('');
+    return '<div class="numberLineWrap"><div class="numberLine">' + dots + '</div></div>';
+  }
+
+  // measures actual rendered label widths to assign each dot a vertical "lane" so labels never
+  // overlap, however tightly the underlying values are clustered (percent-based spacing alone
+  // can't account for real font/label widths).
+  function layoutNumberLine(wrap) {
+    const line = wrap.querySelector('.numberLine');
+    if (!line) return;
+    const dots = Array.from(line.querySelectorAll('.nlDot'));
+    if (!dots.length) return;
+    dots.forEach((d) => { d.style.marginTop = '0px'; });
+    const lineWidth = line.getBoundingClientRect().width;
+    if (!lineWidth) return;
+    const items = dots.map((el) => ({
+      el,
+      leftPct: parseFloat(el.style.left) || 0,
+      width: el.querySelector('.nlLabel').offsetWidth,
+      height: el.querySelector('.nlLabel').offsetHeight,
+    })).sort((a, b) => a.leftPct - b.leftPct);
+    const maxLabelHeight = Math.max.apply(null, items.map((it) => it.height));
+    const GAP_PX = 8, BASE_OFFSET = 22, STEP = maxLabelHeight + 10;
+    const laneRightEdgePx = [];
+    let maxDown = BASE_OFFSET, maxUp = BASE_OFFSET;
+    items.forEach((item) => {
+      const centerPx = (item.leftPct / 100) * lineWidth;
+      const halfW = item.width / 2 + GAP_PX;
+      let lane = 0;
+      while (lane < laneRightEdgePx.length && centerPx - halfW < laneRightEdgePx[lane]) lane++;
+      laneRightEdgePx[lane] = centerPx + halfW;
+      const depth = Math.floor(lane / 2);
+      const offset = BASE_OFFSET + depth * STEP;
+      const isDown = lane % 2 === 0;
+      item.el.style.marginTop = (isDown ? offset : -offset) + 'px';
+      if (isDown) maxDown = Math.max(maxDown, offset); else maxUp = Math.max(maxUp, offset);
+    });
+    wrap.style.paddingTop = (maxUp + 14) + 'px';
+    wrap.style.paddingBottom = (maxDown + 14) + 'px';
+  }
+
   function renderMixedConversionStep(step) {
     const lines = [];
     if (step.c1) lines.push(mixedDisplay(step.f1.n, step.f1.d) + ' <span class="arrow">=</span> ' + fracSpan(step.f1.n, step.f1.d));
@@ -1009,6 +1210,67 @@
         '</div>',
         'เศษส่วนทั้งสองเมื่อมีตัวส่วนเท่ากันแล้ว พร้อมนำมาบวกหรือลบ'
       )
+    };
+  }
+  function renderCompareResultStep(step) {
+    const word = { '>': 'มากกว่า', '<': 'น้อยกว่า', '=': 'เท่ากับ' }[step.relation];
+    return {
+      title: 'เปรียบเทียบตัวเศษ',
+      desc: 'เมื่อตัวส่วนเท่ากันแล้ว เศษส่วนที่มีตัวเศษมากกว่าจะมีค่ามากกว่า',
+      math: fracSpan(step.f1.n, step.f1.d) + ' <span class="op">' + step.relation + '</span> ' + fracSpan(step.f2.n, step.f2.d) + ' <span class="arrow">(' + word + ')</span>',
+      visual: figure(
+        '<div class="barPair">' +
+          '<div class="barUnit">' + barModelHTML(step.n1s, step.l, 'แถบ ' + step.n1s + ' ใน ' + step.l) + '<span class="barLabel">' + fracSpan(step.f1.n, step.f1.d) + '</span></div>' +
+          '<div class="barUnit">' + barModelHTML(step.n2s, step.l, 'แถบ ' + step.n2s + ' ใน ' + step.l, true) + '<span class="barLabel">' + fracSpan(step.f2.n, step.f2.d) + '</span></div>' +
+        '</div>',
+        'แถบที่เติมสีมากกว่าคือเศษส่วนที่มีค่ามากกว่า'
+      )
+    };
+  }
+  function renderOrderMixedConvertStep(step) {
+    const lines = step.list.map(function (f, i) {
+      if (!step.needsConv[i]) return null;
+      return mixedDisplay(f.n, f.d) + ' <span class="arrow">=</span> ' + fracSpan(f.n, f.d);
+    }).filter(Boolean);
+    return {
+      title: 'แปลงจำนวนผสมทั้งหมดเป็นเศษเกิน',
+      desc: 'แปลงทุกจำนวนที่เป็นจำนวนผสมให้เป็นเศษเกินก่อน เพื่อให้เปรียบเทียบได้ง่ายขึ้น',
+      math: lines.join('<br><br>'),
+      visual: ''
+    };
+  }
+  function renderOrderLcmStep(step) {
+    return {
+      title: 'หา ค.ร.น. ของทุกจำนวน',
+      desc: 'หาตัวคูณร่วมน้อยของตัวส่วนทั้ง ' + step.list.length + ' จำนวน เพื่อใช้เป็นตัวส่วนร่วมเดียวกัน',
+      math: '<span class="mono">ค.ร.น.(' + step.list.map(function (f) { return f.d; }).join(', ') + ') = ' + step.l + '</span>',
+      visual: ''
+    };
+  }
+  function renderOrderConvertAllStep(step) {
+    const rows = step.list.map(function (f, i) {
+      return '<div class="lessonStep" style="grid-template-columns:1fr auto 1fr;">' +
+        '<div class="lsBody" style="text-align:right;">' + fracSpan(f.n, f.d) + '</div>' +
+        '<span class="arrow">=</span>' +
+        '<div class="lsBody">' + fracSpan(step.converted[i], step.l) + '</div>' +
+      '</div>';
+    }).join('');
+    return {
+      title: 'แปลงตัวส่วนทั้งหมดให้เท่ากัน',
+      desc: 'คูณตัวเศษและตัวส่วนของแต่ละจำนวนให้ตัวส่วนกลายเป็น ' + step.l + ' ทุกจำนวน',
+      math: rows,
+      visual: ''
+    };
+  }
+  function renderOrderFinalStep(step) {
+    const dirWord = step.ascending ? 'น้อยไปมาก' : 'มากไปน้อย';
+    const chain = step.order.map(function (idx) { return mixedDisplay(step.list[idx].n, step.list[idx].d); })
+      .join(' <span class="op">' + (step.ascending ? '&lt;' : '&gt;') + '</span> ');
+    return {
+      title: 'เรียงลำดับผลลัพธ์',
+      desc: 'เรียงตามตัวเศษที่แปลงแล้ว (ตัวส่วนเท่ากันหมด) จาก' + dirWord,
+      math: '<div style="font-size:19px;">' + chain + '</div>',
+      visual: figure(numberLineHTML(step.list, step.order), 'ตำแหน่งบนเส้นจำนวนแสดงขนาดจริงของแต่ละจำนวน ตัวเลขในวงกลมคือลำดับที่ ' + dirWord)
     };
   }
   function renderAddSubStep(step) {
@@ -1094,6 +1356,11 @@
       case 'ลดรูปเศษส่วน': return renderSimplifyStep(step);
       case 'ตรวจสอบการลดรูป': return renderCheckSimplifyStep(step);
       case 'แปลงเป็นจำนวนผสม': return renderFinalMixedStep(step);
+      case 'เปรียบเทียบตัวเศษ': return renderCompareResultStep(step);
+      case 'แปลงจำนวนผสมทั้งหมด': return renderOrderMixedConvertStep(step);
+      case 'หา ค.ร.น. ของทุกจำนวน': return renderOrderLcmStep(step);
+      case 'แปลงตัวส่วนทั้งหมดให้เท่ากัน': return renderOrderConvertAllStep(step);
+      case 'เรียงลำดับผลลัพธ์': return renderOrderFinalStep(step);
       default: return { title: step.title, desc: '', math: '', visual: '' };
     }
   }
@@ -1231,8 +1498,33 @@
   let activeProblemIndex = -1;
   let activeSteps = [];
   let activeResult = null;
+  let activeRelation = null;
+  let activeOrder = null;
   let activeStepIndex = 0;
   let manualMode = false;
+  let problemType = 'compute';
+  let orderUserSequence = [];
+
+  function buildProblemSteps(p) {
+    if (p.type === 'compare') { const r = buildCompareSteps(p.f1, p.f2); return { steps: r.steps, result: null, relation: r.relation, order: null }; }
+    if (p.type === 'order') { const r = buildOrderSteps(p.list, p.ascending); return { steps: r.steps, result: null, relation: null, order: r.order }; }
+    const r = buildStepsFor(p.op, p.f1, p.f2); return { steps: r.steps, result: r.result, relation: null, order: null };
+  }
+
+  function problemLabelHTML(p) {
+    if (p.type === 'compare') return mixedDisplay(p.f1.n, p.f1.d) + ' <span class="op">⬚</span> ' + mixedDisplay(p.f2.n, p.f2.d);
+    if (p.type === 'order') return p.list.map((f) => mixedDisplay(f.n, f.d)).join('<span class="op">,</span> ');
+    return exprHTML(p.f1, p.op, p.f2);
+  }
+  function problemExprHTML(p) {
+    if (p.type === 'compare' || p.type === 'order') return problemLabelHTML(p);
+    return problemLabelHTML(p) + ' <span class="op">=</span> ?';
+  }
+  function problemTypeClass(p) {
+    if (p.type === 'compare') return 'op-compare';
+    if (p.type === 'order') return 'op-order';
+    return 'op-' + p.op;
+  }
 
   function readAutoConfig() {
     const ops = Array.from(document.querySelectorAll('input[name=op]:checked')).map((el) => el.value);
@@ -1255,6 +1547,9 @@
     try {
       const cfg = readAutoConfig();
       cfg.quizMode = quizModeEnabled();
+      cfg.problemType = problemType;
+      cfg.orderCount = Math.min(10, Math.max(3, parseInt($('orderCount').value, 10) || 5));
+      cfg.orderDirection = $('orderDirection').value;
       localStorage.setItem(CONFIG_KEY, JSON.stringify(cfg));
     } catch (e) { /* storage unavailable */ }
   }
@@ -1269,26 +1564,61 @@
     if (cfg.count != null) $('probCount').value = cfg.count;
     if (cfg.allowImproper != null) $('allowImproper').checked = cfg.allowImproper;
     if (cfg.quizMode != null) $('quizMode').checked = cfg.quizMode;
+    if (cfg.orderCount != null) $('orderCount').value = cfg.orderCount;
+    if (cfg.orderDirection != null) $('orderDirection').value = cfg.orderDirection;
+    if (cfg.problemType != null) {
+      problemType = cfg.problemType;
+      document.querySelectorAll('.ptypeBtn').forEach((b) => b.classList.toggle('active', b.dataset.ptype === problemType));
+      $('computeOnlyFields').style.display = problemType === 'compute' ? '' : 'none';
+      $('orderOnlyFields').style.display = problemType === 'order' ? '' : 'none';
+    }
     if (Array.isArray(cfg.ops) && cfg.ops.length) {
       document.querySelectorAll('input[name=op]').forEach((el) => { el.checked = cfg.ops.includes(el.value); });
     }
   }
   $('quizMode').addEventListener('change', saveConfig);
 
+  document.querySelectorAll('.ptypeBtn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      problemType = btn.dataset.ptype;
+      document.querySelectorAll('.ptypeBtn').forEach((b) => b.classList.toggle('active', b === btn));
+      $('computeOnlyFields').style.display = problemType === 'compute' ? '' : 'none';
+      $('orderOnlyFields').style.display = problemType === 'order' ? '' : 'none';
+      saveConfig();
+    });
+  });
+
   $('genBtn').addEventListener('click', () => {
     showAutoErr('');
     const cfg = readAutoConfig();
-    if (cfg.ops.length === 0) { showAutoErr('กรุณาเลือกอย่างน้อยหนึ่งการดำเนินการ'); return; }
-    const list = [];
-    let attempts = 0;
-    while (list.length < cfg.count && attempts < cfg.count * 40) {
-      attempts++;
-      const p = generateProblem(cfg);
-      const built = buildStepsFor(p.op, p.f1, p.f2);
-      if (built.error) continue;
-      list.push({ op: p.op, f1: p.f1, f2: p.f2, solved: false, attempted: false, correct: null });
+    let list = [];
+    if (problemType === 'compute') {
+      if (cfg.ops.length === 0) { showAutoErr('กรุณาเลือกอย่างน้อยหนึ่งการดำเนินการ'); return; }
+      let attempts = 0;
+      while (list.length < cfg.count && attempts < cfg.count * 40) {
+        attempts++;
+        const p = generateProblem(cfg);
+        const built = buildStepsFor(p.op, p.f1, p.f2);
+        if (built.error) continue;
+        list.push({ type: 'compute', op: p.op, f1: p.f1, f2: p.f2, solved: false, attempted: false, correct: null });
+      }
+      if (list.length === 0) { showAutoErr('ไม่สามารถสร้างโจทย์ได้ด้วยค่าที่กำหนด กรุณาขยายขอบเขตตัวเลข'); return; }
+    } else if (problemType === 'compare') {
+      for (let i = 0; i < cfg.count; i++) {
+        const p = generateCompareProblem(cfg);
+        list.push({ type: 'compare', f1: p.f1, f2: p.f2, solved: false, attempted: false, correct: null });
+      }
+    } else {
+      const orderCount = Math.min(10, Math.max(3, parseInt($('orderCount').value, 10) || 5));
+      const direction = $('orderDirection').value;
+      for (let i = 0; i < cfg.count; i++) {
+        const nums = generateDistinctList(cfg, orderCount);
+        if (!nums) continue;
+        const ascending = direction === 'random' ? Math.random() < 0.5 : direction === 'asc';
+        list.push({ type: 'order', list: nums, ascending, solved: false, attempted: false, correct: null });
+      }
+      if (list.length === 0) { showAutoErr('ไม่สามารถสร้างโจทย์ได้ ลองขยายขอบเขตตัวเลขหรือลดจำนวนตัวเลขต่อโจทย์'); return; }
     }
-    if (list.length === 0) { showAutoErr('ไม่สามารถสร้างโจทย์ได้ด้วยค่าที่กำหนด กรุณาขยายขอบเขตตัวเลข'); return; }
     saveConfig();
     problems = list;
     manualMode = false;
@@ -1305,7 +1635,7 @@
     const op = $('manualOp').value;
     const built = buildStepsFor(op, a, b);
     if (built.error) { showManualErr(built.error); return; }
-    problems = [{ op, f1: a, f2: b, solved: false, attempted: false, correct: null }];
+    problems = [{ type: 'compute', op, f1: a, f2: b, solved: false, attempted: false, correct: null }];
     manualMode = true;
     openSolver(0);
   });
@@ -1339,10 +1669,10 @@
     grid.innerHTML = '';
     problems.forEach((p, i) => {
       const card = document.createElement('div');
-      card.className = 'probCard op-' + p.op;
+      card.className = 'probCard ' + problemTypeClass(p);
       card.innerHTML =
         '<span class="idx">' + (i + 1) + '</span>' +
-        '<span class="expr">' + exprHTML(p.f1, p.op, p.f2) + '</span>' +
+        '<span class="expr">' + problemLabelHTML(p) + '</span>' +
         badgeHTML(p) +
         '<button class="btn" type="button">ดูวิธีทำ</button>';
       card.querySelector('button').addEventListener('click', () => openSolver(i));
@@ -1367,7 +1697,7 @@
         : (p.correct ? '<span class="status correct">ถูกต้อง ✓</span>' : '<span class="status incorrect">ยังไม่ถูก ✗</span>');
       row.innerHTML =
         '<span class="idx">' + (i + 1) + '</span>' +
-        '<span class="expr">' + exprHTML(p.f1, p.op, p.f2) + '</span>' +
+        '<span class="expr">' + problemLabelHTML(p) + '</span>' +
         statusHTML +
         '<button class="btn" type="button">ทบทวน</button>';
       row.querySelector('button').addEventListener('click', () => reviewProblem(i));
@@ -1379,6 +1709,19 @@
   $('summaryBackBtn').addEventListener('click', () => { renderList(); showScreen('list'); });
   $('summaryNewSetBtn').addEventListener('click', () => { problems = []; showScreen('setup'); });
 
+  function printQuestionHTML(p) {
+    if (p.type === 'compare') return problemLabelHTML(p);
+    if (p.type === 'order') return problemLabelHTML(p) + ' (เรียง' + (p.ascending ? 'จากน้อยไปมาก' : 'จากมากไปน้อย') + ')';
+    return problemLabelHTML(p) + ' = _______________';
+  }
+  function printAnswerHTML(p) {
+    const built = buildProblemSteps(p);
+    if (p.type === 'compare') return mixedDisplay(p.f1.n, p.f1.d) + ' <span class="op">' + built.relation + '</span> ' + mixedDisplay(p.f2.n, p.f2.d);
+    if (p.type === 'order') return built.order.map((idx) => mixedDisplay(p.list[idx].n, p.list[idx].d))
+      .join(' <span class="op">' + (p.ascending ? '&lt;' : '&gt;') + '</span> ');
+    return mixedDisplay(built.result.n, built.result.d);
+  }
+
   $('printBtn').addEventListener('click', () => {
     const includeKey = $('printIncludeKey').checked;
     $('pwMeta').textContent = 'จำนวน ' + problems.length + ' ข้อ · สร้างเมื่อ ' + new Date().toLocaleDateString('th-TH');
@@ -1387,7 +1730,7 @@
     problems.forEach((p, i) => {
       const row = document.createElement('div');
       row.className = 'pwProblem';
-      row.innerHTML = (i + 1) + '. ' + exprHTML(p.f1, p.op, p.f2) + ' = _______________';
+      row.innerHTML = (i + 1) + '. ' + printQuestionHTML(p);
       listEl.appendChild(row);
     });
     $('pwAnswerKey').style.display = includeKey ? '' : 'none';
@@ -1395,10 +1738,9 @@
       const keyList = $('pwAnswerList');
       keyList.innerHTML = '';
       problems.forEach((p, i) => {
-        const built = buildStepsFor(p.op, p.f1, p.f2);
         const row = document.createElement('div');
         row.className = 'pwProblem';
-        row.innerHTML = (i + 1) + '. ' + mixedDisplay(built.result.n, built.result.d);
+        row.innerHTML = (i + 1) + '. ' + printAnswerHTML(p);
         keyList.appendChild(row);
       });
     }
@@ -1408,14 +1750,16 @@
   function openSolver(index) {
     activeProblemIndex = index;
     const p = problems[index];
-    const built = buildStepsFor(p.op, p.f1, p.f2);
+    const built = buildProblemSteps(p);
     activeSteps = built.steps;
     activeResult = built.result;
+    activeRelation = built.relation;
+    activeOrder = built.order;
     activeStepIndex = 0;
     $('breadcrumb').textContent = manualMode ? 'โจทย์ของคุณเอง' : ('โจทย์ที่ ' + (index + 1) + ' จาก ' + problems.length);
     $('backToListBtn').style.display = manualMode ? 'none' : '';
-    $('problemExpr').innerHTML = exprHTML(p.f1, p.op, p.f2) + ' <span class="op">=</span> ?';
-    $('problemHeader').className = 'problemHeader op-' + p.op;
+    $('problemExpr').innerHTML = problemExprHTML(p);
+    $('problemHeader').className = 'problemHeader ' + problemTypeClass(p);
     $('doneWrap').style.display = 'none';
     if (quizModeEnabled()) {
       showAnswerStage();
@@ -1430,14 +1774,16 @@
   function reviewProblem(index) {
     activeProblemIndex = index;
     const p = problems[index];
-    const built = buildStepsFor(p.op, p.f1, p.f2);
+    const built = buildProblemSteps(p);
     activeSteps = built.steps;
     activeResult = built.result;
+    activeRelation = built.relation;
+    activeOrder = built.order;
     activeStepIndex = 0;
     $('breadcrumb').textContent = 'ทบทวนโจทย์ที่ ' + (index + 1) + ' จาก ' + problems.length;
     $('backToListBtn').style.display = '';
-    $('problemExpr').innerHTML = exprHTML(p.f1, p.op, p.f2) + ' <span class="op">=</span> ?';
-    $('problemHeader').className = 'problemHeader op-' + p.op;
+    $('problemExpr').innerHTML = problemExprHTML(p);
+    $('problemHeader').className = 'problemHeader ' + problemTypeClass(p);
     $('answerWrap').style.display = 'none';
     $('doneWrap').style.display = 'none';
     $('stepsWrap').style.display = '';
@@ -1464,15 +1810,69 @@
   function showAnswerStage() {
     $('stepsWrap').style.display = 'none';
     $('answerWrap').style.display = '';
-    const widget = $('answerWidget');
-    widget.querySelector('.fiWhole').value = '';
-    widget.querySelector('.fiNum').value = '';
-    widget.querySelector('.fiDen').value = '';
+    const p = problems[activeProblemIndex];
     $('answerFeedback').className = 'answerFeedback';
     $('answerFeedback').innerHTML = '';
     $('answerActions').innerHTML = '<button class="btn ghost" id="skipToStepsBtn" type="button">ข้ามไปดูวิธีทำ →</button>';
     sayBubble($('answerSpeech'), pickRandom(MASCOT_OPENERS));
-    widget.querySelector('.fiNum').focus();
+
+    $('computeAnswerRow').style.display = 'none';
+    $('compareAnswerRow').style.display = 'none';
+    $('orderAnswerRow').style.display = 'none';
+
+    if (p.type === 'compare') {
+      $('answerHeading').textContent = 'เศษส่วนไหนมากกว่ากัน?';
+      $('answerHint').textContent = 'เลือกเครื่องหมายที่ถูกต้อง';
+      $('compareAnswerRow').style.display = '';
+      $('compareExprA').innerHTML = mixedDisplay(p.f1.n, p.f1.d);
+      $('compareExprB').innerHTML = mixedDisplay(p.f2.n, p.f2.d);
+      document.querySelectorAll('#relBtnRow .relBtn').forEach((b) => { b.disabled = false; b.classList.remove('picked', 'correct', 'incorrect'); });
+    } else if (p.type === 'order') {
+      $('answerHeading').textContent = 'ลองเรียงลำดับดูสิ';
+      $('answerHint').textContent = 'คลิกตัวเลขตามลำดับที่คุณคิดว่าถูกต้อง';
+      $('orderAnswerRow').style.display = '';
+      $('orderDirHint').textContent = 'เรียง' + (p.ascending ? 'จากน้อยไปมาก' : 'จากมากไปน้อย');
+      orderUserSequence = [];
+      renderOrderAnswerUI(p);
+    } else {
+      $('answerHeading').textContent = 'ลองคิดคำตอบเองก่อนดูวิธีทำ';
+      $('answerHint').textContent = 'ใส่ตัวเลขลงในแต่ละช่อง แล้วกดตรวจคำตอบ';
+      $('computeAnswerRow').style.display = '';
+      const widget = $('answerWidget');
+      widget.querySelector('.fiWhole').value = '';
+      widget.querySelector('.fiNum').value = '';
+      widget.querySelector('.fiDen').value = '';
+      widget.querySelector('.fiNum').focus();
+    }
+  }
+
+  function renderOrderAnswerUI(p) {
+    const seq = $('orderSequence');
+    seq.innerHTML = '';
+    for (let i = 0; i < p.list.length; i++) {
+      const slot = document.createElement('div');
+      if (i < orderUserSequence.length) {
+        const idx = orderUserSequence[i];
+        slot.className = 'orderSlot filled';
+        slot.innerHTML = '<span class="orderSlotNum">' + (i + 1) + '</span>' + mixedDisplay(p.list[idx].n, p.list[idx].d);
+        slot.addEventListener('click', () => { orderUserSequence.splice(i, 1); renderOrderAnswerUI(p); });
+      } else {
+        slot.className = 'orderSlot';
+        slot.innerHTML = '<span class="orderSlotNum">' + (i + 1) + '</span>?';
+      }
+      seq.appendChild(slot);
+    }
+    const pool = $('orderPool');
+    pool.innerHTML = '';
+    p.list.forEach((f, idx) => {
+      if (orderUserSequence.indexOf(idx) !== -1) return;
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'orderChip';
+      chip.innerHTML = mixedDisplay(f.n, f.d);
+      chip.addEventListener('click', () => { orderUserSequence.push(idx); renderOrderAnswerUI(p); });
+      pool.appendChild(chip);
+    });
   }
 
   function goToSteps() {
@@ -1480,6 +1880,25 @@
     $('stepsWrap').style.display = '';
     activeStepIndex = 0;
     renderCurrentStep();
+  }
+
+  function applyAnswerResult(isCorrect, correctAnswerHTML) {
+    const p = problems[activeProblemIndex];
+    p.attempted = true;
+    p.correct = isCorrect;
+    const fb = $('answerFeedback');
+    if (isCorrect) {
+      fb.className = 'answerFeedback correct show';
+      fb.innerHTML = '🎉 ถูกต้อง! คำตอบคือ <span class="ansExpr">' + correctAnswerHTML + '</span>';
+      sayBubble($('answerSpeech'), pickRandom(MASCOT_CORRECT));
+    } else {
+      fb.className = 'answerFeedback incorrect show';
+      fb.innerHTML = 'ยังไม่ถูกนะ คำตอบที่ถูกต้องคือ <span class="ansExpr">' + correctAnswerHTML + '</span> — ลองดูวิธีทำด้านล่าง';
+      sayBubble($('answerSpeech'), pickRandom(MASCOT_INCORRECT));
+    }
+    $('answerActions').innerHTML =
+      '<button class="btn primary" id="viewStepsBtn" type="button">ดูวิธีทำทีละขั้น →</button>' +
+      '<button class="btn ghost" id="answerDoneBtn" type="button">เสร็จสิ้นข้อนี้</button>';
   }
 
   function checkAnswer() {
@@ -1491,23 +1910,41 @@
       return;
     }
     const isCorrect = parsed.n * activeResult.d === activeResult.n * parsed.d;
-    const p = problems[activeProblemIndex];
-    p.attempted = true;
-    p.correct = isCorrect;
-    if (isCorrect) {
-      fb.className = 'answerFeedback correct show';
-      fb.innerHTML = '🎉 ถูกต้อง! คำตอบคือ <span class="ansExpr">' + mixedDisplay(activeResult.n, activeResult.d) + '</span>';
-      sayBubble($('answerSpeech'), pickRandom(MASCOT_CORRECT));
-    } else {
-      fb.className = 'answerFeedback incorrect show';
-      fb.innerHTML = 'ยังไม่ถูกนะ คำตอบที่ถูกต้องคือ <span class="ansExpr">' + mixedDisplay(activeResult.n, activeResult.d) + '</span> — ลองดูวิธีทำด้านล่าง';
-      sayBubble($('answerSpeech'), pickRandom(MASCOT_INCORRECT));
-    }
-    $('answerActions').innerHTML =
-      '<button class="btn primary" id="viewStepsBtn" type="button">ดูวิธีทำทีละขั้น →</button>' +
-      '<button class="btn ghost" id="answerDoneBtn" type="button">เสร็จสิ้นข้อนี้</button>';
+    applyAnswerResult(isCorrect, mixedDisplay(activeResult.n, activeResult.d));
   }
+
+  function checkCompareAnswer(rel) {
+    document.querySelectorAll('#relBtnRow .relBtn').forEach((b) => { b.disabled = true; });
+    const btn = document.querySelector('#relBtnRow .relBtn[data-rel="' + rel + '"]');
+    const isCorrect = rel === activeRelation;
+    if (btn) btn.classList.add('picked', isCorrect ? 'correct' : 'incorrect');
+    const p = problems[activeProblemIndex];
+    const answerHTML = mixedDisplay(p.f1.n, p.f1.d) + ' <span class="op">' + activeRelation + '</span> ' + mixedDisplay(p.f2.n, p.f2.d);
+    applyAnswerResult(isCorrect, answerHTML);
+  }
+
+  function checkOrderAnswer() {
+    const p = problems[activeProblemIndex];
+    const fb = $('answerFeedback');
+    if (orderUserSequence.length < p.list.length) {
+      fb.className = 'answerFeedback incorrect show';
+      fb.textContent = 'กรุณาเรียงให้ครบทุกจำนวนก่อนตรวจคำตอบ';
+      return;
+    }
+    const isCorrect = JSON.stringify(orderUserSequence) === JSON.stringify(activeOrder);
+    const chainHTML = activeOrder.map((idx) => mixedDisplay(p.list[idx].n, p.list[idx].d))
+      .join(' <span class="op">' + (p.ascending ? '&lt;' : '&gt;') + '</span> ');
+    applyAnswerResult(isCorrect, chainHTML);
+  }
+
   $('checkAnswerBtn').addEventListener('click', checkAnswer);
+  $('relBtnRow').addEventListener('click', (e) => {
+    const btn = e.target.closest('.relBtn');
+    if (!btn || btn.disabled) return;
+    checkCompareAnswer(btn.dataset.rel);
+  });
+  $('orderResetBtn').addEventListener('click', () => { orderUserSequence = []; renderOrderAnswerUI(problems[activeProblemIndex]); });
+  $('orderCheckBtn').addEventListener('click', checkOrderAnswer);
   $('answerActions').addEventListener('click', (e) => {
     if (e.target.id === 'skipToStepsBtn' || e.target.id === 'viewStepsBtn') goToSteps();
     else if (e.target.id === 'answerDoneBtn') finishProblem();
@@ -1530,6 +1967,10 @@
     $('stepDesc').textContent = view.desc;
     $('stepMath').innerHTML = view.math;
     $('stepVisual').innerHTML = view.visual;
+    $('stepVisual').style.display = view.visual ? '' : 'none';
+    $('stepBody').classList.toggle('noVisualStep', !view.visual);
+    const nlWrap = $('stepVisual').querySelector('.numberLineWrap');
+    if (nlWrap) layoutNumberLine(nlWrap);
 
     $('prevBtn').disabled = activeStepIndex === 0;
     $('nextBtn').textContent = activeStepIndex === total - 1 ? 'ดูคำตอบ ✓' : 'ถัดไป →';
@@ -1561,12 +2002,24 @@
     });
   }
 
+  function finalAnswerHTML() {
+    const p = problems[activeProblemIndex];
+    if (p.type === 'compare') {
+      return mixedDisplay(p.f1.n, p.f1.d) + ' <span class="op">' + activeRelation + '</span> ' + mixedDisplay(p.f2.n, p.f2.d);
+    }
+    if (p.type === 'order') {
+      return activeOrder.map((idx) => mixedDisplay(p.list[idx].n, p.list[idx].d))
+        .join(' <span class="op">' + (p.ascending ? '&lt;' : '&gt;') + '</span> ');
+    }
+    return mixedDisplay(activeResult.n, activeResult.d);
+  }
+
   function finishProblem() {
     if (!manualMode) problems[activeProblemIndex].solved = true;
     $('answerWrap').style.display = 'none';
     $('stepsWrap').style.display = 'none';
     $('doneWrap').style.display = '';
-    $('finalAnswer').innerHTML = mixedDisplay(activeResult.n, activeResult.d);
+    $('finalAnswer').innerHTML = finalAnswerHTML();
     const hasNext = !manualMode && activeProblemIndex < problems.length - 1;
     $('nextProblemBtn').style.display = hasNext ? '' : 'none';
     $('toListBtn').style.display = manualMode ? 'none' : '';
