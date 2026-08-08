@@ -1378,7 +1378,7 @@
     if (step.c2) lines.push(mixedDisplay(step.f2.n, step.f2.d) + ' <span class="arrow">=</span> ' + fracSpan(step.f2.n, step.f2.d));
     return {
       title: 'แปลงจำนวนผสมเป็นเศษเกิน',
-      desc: 'คูณจำนวนเต็มกับตัวส่วน แล้วบวกด้วยตัวเศษเดิม จะได้เศษเกินที่คำนวณต่อได้ง่ายขึ้น',
+      desc: 'คูณจำนวนเต็มกับตัวส่วน แล้วบวกด้วยตัวเศษเดิม (ตัวส่วนยังเท่าเดิม) จะได้เศษเกินที่คำนวณต่อได้ง่ายขึ้น',
       math: lines.join('<br><br>'),
       visual: figure(
         '<div class="barPair">' +
@@ -1495,7 +1495,7 @@
   function renderMulStep(step) {
     return {
       title: 'คูณเศษกับเศษ ส่วนกับส่วน',
-      desc: 'ในการคูณเศษส่วน ให้คูณตัวเศษทั้งสองเข้าด้วยกัน และคูณตัวส่วนทั้งสองเข้าด้วยกัน',
+      desc: 'ในการคูณเศษส่วน ให้คูณตัวเศษทั้งสองเข้าด้วยกัน และคูณตัวส่วนทั้งสองเข้าด้วยกัน — ไม่ต้องหา ค.ร.น. หรือทำให้ตัวส่วนเท่ากันก่อนเหมือนตอนบวกลบ',
       math: fracSpan(step.f1.n, step.f1.d) + ' <span class="op">×</span> ' + fracSpan(step.f2.n, step.f2.d) + ' <span class="arrow">=</span> ' + fracSpan(step.prodN, step.prodD),
       visual: figure(multiplyVisualHTML(step.f1.n, step.f1.d, step.f2.n, step.f2.d, step.prodN, step.prodD), 'แบ่งแต่ละช่องของเศษส่วนที่สองด้วยเศษส่วนแรก แล้วนับช่องเล็กที่เติมสีทั้งหมด')
     };
@@ -1517,7 +1517,7 @@
   function renderDivMulStep(step) {
     return {
       title: 'คูณด้วยส่วนกลับ',
-      desc: 'การหารเศษส่วน เท่ากับการคูณด้วยส่วนกลับของตัวหาร',
+      desc: 'การหารเศษส่วน เท่ากับการคูณด้วยส่วนกลับของตัวหาร — จำง่ายๆ ว่า "เก็บตัวแรก เปลี่ยนเป็นคูณ กลับตัวหลัง" แล้วคูณเหมือนการคูณเศษส่วนทั่วไป',
       math: fracSpan(step.f1.n, step.f1.d) + ' <span class="op">×</span> ' + fracSpan(step.recip.n, step.recip.d) + ' <span class="arrow">=</span> ' + fracSpan(step.prodN, step.prodD),
       visual: figure(multiplyVisualHTML(step.f1.n, step.f1.d, step.recip.n, step.recip.d, step.prodN, step.prodD), 'แบ่งแต่ละช่องของส่วนกลับด้วยเศษส่วนแรก แล้วนับช่องเล็กที่เติมสีทั้งหมด')
     };
