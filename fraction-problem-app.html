@@ -168,15 +168,70 @@
   .doneCard .answer{ font-size:30px; margin:10px 0 18px; }
   .doneCard .btnRow{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:8px; }
 
+  /* quiz answer stage */
+  .answerCard h3{ font-size:16px; margin-bottom:4px; }
+  .answerCard .hint{ font-size:13px; color:var(--ink-soft); margin-bottom:16px; }
+  .answerRow{ display:flex; gap:10px; flex-wrap:wrap; }
+  .answerRow input[type=text]{ flex:1 1 160px; border:1.5px solid var(--line-strong); border-radius:8px; padding:11px 12px; background:var(--paper); color:var(--ink); font-size:18px; }
+  .answerFeedback{ margin-top:16px; padding:14px 16px; border-radius:10px; font-size:14px; display:none; align-items:center; gap:8px; flex-wrap:wrap; }
+  .answerFeedback.show{ display:flex; }
+  .answerFeedback.correct{ background:var(--accent-soft); color:var(--accent-ink); }
+  .answerFeedback.incorrect{ background:var(--danger-soft); color:var(--danger); }
+  .answerFeedback .ansExpr{ font-size:18px; }
+  .answerActions{ display:flex; gap:10px; margin-top:16px; flex-wrap:wrap; }
+
+  /* score bar + result badges */
+  .scoreBar{ display:flex; align-items:center; gap:22px; background:var(--paper-raised); border:1px solid var(--line); border-radius:12px; padding:14px 20px; margin-bottom:20px; flex-wrap:wrap; box-shadow:var(--shadow); }
+  .scoreBar .scoreStat{ font-size:12.5px; color:var(--ink-soft); white-space:nowrap; }
+  .scoreBar .scoreStat b{ color:var(--ink); font-size:17px; display:block; font-variant-numeric:tabular-nums; }
+  .progressTrack{ height:6px; border-radius:4px; background:var(--line); overflow:hidden; flex:1 1 140px; min-width:100px; }
+  .progressTrack i{ display:block; height:100%; background:var(--accent); }
+  .probCard .resultBadge{ font-size:11px; font-weight:700; padding:3px 9px; border-radius:20px; white-space:nowrap; }
+  .probCard .resultBadge.correct{ color:var(--accent-ink); background:var(--accent-soft); }
+  .probCard .resultBadge.incorrect{ color:var(--danger); background:var(--danger-soft); }
+  .listActions{ display:flex; align-items:center; gap:16px; flex-wrap:wrap; margin-top:24px; }
+
+  /* summary screen */
+  .summaryHead{ display:flex; align-items:center; gap:24px; flex-wrap:wrap; margin-bottom:26px; }
+  .scoreCircle{ width:96px; height:96px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-direction:column; background:var(--accent-soft); color:var(--accent-ink); flex:0 0 auto; }
+  .scoreCircle b{ font-size:24px; line-height:1.2; }
+  .scoreCircle span{ font-size:10.5px; }
+  .summaryList{ display:grid; gap:8px; margin-bottom:26px; }
+  .summaryRow{ display:flex; align-items:center; gap:14px; background:var(--paper-raised); border:1px solid var(--line); border-radius:10px; padding:11px 16px; }
+  .summaryRow .idx{ font-size:11.5px; color:var(--ink-soft); font-weight:700; flex:0 0 18px; }
+  .summaryRow .expr{ flex:1; font-size:16px; display:flex; align-items:center; gap:2px; }
+  .summaryRow .status{ font-size:13px; font-weight:600; white-space:nowrap; }
+  .summaryRow .status.correct{ color:var(--accent-ink); }
+  .summaryRow .status.incorrect{ color:var(--danger); }
+  .summaryRow .status.pending{ color:var(--ink-soft); }
+  .summaryActions{ display:flex; gap:10px; flex-wrap:wrap; }
+
+  /* print worksheet */
+  #printSheet{ display:none; }
+
   @media (prefers-reduced-motion: no-preference){
     .btn, .opChip .box, .presetBtn, .tabBtn{ transition:background-color .15s ease, border-color .15s ease, color .15s ease; }
+    .stepCard, .visualCard{ animation:stepIn .18s ease; }
+    @keyframes stepIn{ from{ opacity:0; transform:translateY(4px); } to{ opacity:1; transform:none; } }
+  }
+  @media print{
+    body > *:not(#printSheet){ display:none !important; }
+    #printSheet{ display:block !important; padding:0; color:#111; background:#fff; font-family:-apple-system,"Segoe UI","Noto Sans Thai","Sarabun",sans-serif; }
+    #printSheet h1{ font-size:20px; margin-bottom:4px; }
+    #printSheet .pwMeta{ font-size:12px; color:#555; margin-bottom:20px; }
+    #printSheet .pwProblem{ break-inside:avoid; padding:12px 0; border-bottom:1px dashed #999; font-size:17px; }
+    #printSheet .pwAnswerKey{ margin-top:34px; padding-top:14px; border-top:2px solid #333; }
+    #printSheet .frac .bar{ background:#111; }
   }
 </style>
 
 <header>
   <div class="inner">
     <div class="brand"><b>เศษส่วน</b><span>แอปฝึกโจทย์ทีละขั้นตอน</span></div>
-    <button class="btn ghost resetBtn" id="resetBtn" type="button">↺ เริ่มใหม่</button>
+    <div style="display:flex; align-items:center; gap:8px;">
+      <button class="btn ghost" id="themeBtn" type="button" title="สลับธีมสี" aria-label="สลับธีมสี">🌓</button>
+      <button class="btn ghost resetBtn" id="resetBtn" type="button">↺ เริ่มใหม่</button>
+    </div>
   </div>
 </header>
 
@@ -241,6 +296,10 @@
           <div class="numInput" style="max-width:160px;"><input type="number" id="probCount" min="1" max="20" value="6"></div>
         </div>
 
+        <div class="field">
+          <div class="checkRow"><input type="checkbox" id="quizMode" checked><label for="quizMode">ให้ลองตอบเองก่อนดูวิธีทำ (โหมดฝึกฝน มีให้คะแนน)</label></div>
+        </div>
+
         <div class="errBox" id="autoErr"></div>
         <button class="btn primary" id="genBtn" type="button">สร้างโจทย์</button>
       </div>
@@ -270,8 +329,21 @@
     <span class="eyebrow">รายการโจทย์</span>
     <h1 id="listHeading">โจทย์ของคุณ</h1>
     <p class="lede">เลือกโจทย์ข้อใดข้อหนึ่งเพื่อดูวิธีทำทีละขั้นตอน</p>
+
+    <div class="scoreBar">
+      <div class="scoreStat"><b id="scoreAttempted">0 / 0</b>ข้อที่ลองตอบ</div>
+      <div class="scoreStat"><b id="scoreCorrect">0</b>ตอบถูก</div>
+      <div class="progressTrack"><i id="scoreProgress" style="width:0%"></i></div>
+      <button class="btn" id="viewSummaryBtn" type="button">สรุปผล</button>
+    </div>
+
     <div class="probGrid" id="probGrid"></div>
-    <div style="margin-top:24px;"><button class="btn ghost" id="backToSetupBtn" type="button">← ตั้งค่าใหม่</button></div>
+
+    <div class="listActions">
+      <button class="btn ghost" id="backToSetupBtn" type="button">← ตั้งค่าใหม่</button>
+      <div class="checkRow" style="margin-left:auto;"><input type="checkbox" id="printIncludeKey"><label for="printIncludeKey" style="font-size:13px;">รวมเฉลย</label></div>
+      <button class="btn" id="printBtn" type="button">🖨 พิมพ์ใบงาน</button>
+    </div>
   </section>
 
   <!-- SCREEN: SOLVER -->
@@ -283,6 +355,21 @@
 
     <div class="problemHeader">
       <div class="exprLine" id="problemExpr"></div>
+    </div>
+
+    <div id="answerWrap">
+      <div class="card answerCard">
+        <h3>ลองคิดคำตอบเองก่อนดูวิธีทำ</h3>
+        <p class="hint">พิมพ์คำตอบในรูปแบบ 3/4, 1 2/3 หรือ 5 แล้วกดตรวจคำตอบ</p>
+        <div class="answerRow">
+          <input type="text" id="answerInput" placeholder="คำตอบของคุณ" autocomplete="off">
+          <button class="btn primary" id="checkAnswerBtn" type="button">ตรวจคำตอบ</button>
+        </div>
+        <div class="answerFeedback" id="answerFeedback"></div>
+        <div class="answerActions" id="answerActions">
+          <button class="btn ghost" id="skipToStepsBtn" type="button">ข้ามไปดูวิธีทำ →</button>
+        </div>
+      </div>
     </div>
 
     <div id="stepsWrap">
@@ -319,7 +406,33 @@
     </div>
   </section>
 
+  <!-- SCREEN: SUMMARY -->
+  <section class="screen" id="screen-summary">
+    <span class="eyebrow">สรุปผลการฝึก</span>
+    <h1>คุณทำได้ดีแค่ไหน</h1>
+    <div class="summaryHead">
+      <div class="scoreCircle"><b id="summaryPct">0%</b><span>ความแม่นยำ</span></div>
+      <div class="scoreStat"><b id="summaryAttempted">0 / 0</b>ข้อที่ลองตอบ</div>
+      <div class="scoreStat"><b id="summaryCorrect">0</b>ตอบถูก</div>
+    </div>
+    <div class="summaryList" id="summaryList"></div>
+    <div class="summaryActions">
+      <button class="btn ghost" id="summaryBackBtn" type="button">← กลับไปยังรายการโจทย์</button>
+      <button class="btn" id="summaryNewSetBtn" type="button">ตั้งค่าโจทย์ใหม่</button>
+    </div>
+  </section>
+
 </main>
+
+<div id="printSheet">
+  <h1 id="pwTitle">ใบงานฝึกเศษส่วน</h1>
+  <div class="pwMeta" id="pwMeta"></div>
+  <div id="pwList"></div>
+  <div class="pwAnswerKey" id="pwAnswerKey">
+    <h1 style="font-size:16px;">เฉลย</h1>
+    <div id="pwAnswerList"></div>
+  </div>
+</div>
 
 <script>
 (function(){
@@ -638,12 +751,34 @@
 
   /* ================= app state & DOM wiring ================= */
   const $ = (id) => document.getElementById(id);
-  const screens = { setup: $('screen-setup'), list: $('screen-list'), solver: $('screen-solver') };
+  const screens = { setup: $('screen-setup'), list: $('screen-list'), solver: $('screen-solver'), summary: $('screen-summary') };
   function showScreen(name) {
     Object.keys(screens).forEach((k) => screens[k].classList.toggle('active', k === name));
     $('resetBtn').classList.toggle('show', name !== 'setup');
     window.scrollTo(0, 0);
   }
+
+  /* ---- theme (persisted) ---- */
+  const THEME_KEY = 'fracapp.theme.v1';
+  const THEME_ICONS = { system: '🌓', light: '☀️', dark: '🌙' };
+  let currentTheme = 'system';
+  function applyTheme(t) {
+    if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+    else document.documentElement.removeAttribute('data-theme');
+    $('themeBtn').textContent = THEME_ICONS[t] || '🌓';
+  }
+  function loadTheme() {
+    let t = 'system';
+    try { t = localStorage.getItem(THEME_KEY) || 'system'; } catch (e) { /* storage unavailable */ }
+    currentTheme = t;
+    applyTheme(t);
+  }
+  $('themeBtn').addEventListener('click', () => {
+    const order = ['system', 'light', 'dark'];
+    currentTheme = order[(order.indexOf(currentTheme) + 1) % order.length];
+    applyTheme(currentTheme);
+    try { localStorage.setItem(THEME_KEY, currentTheme); } catch (e) { /* storage unavailable */ }
+  });
 
   const PRESETS = {
     easy: { denMin: 2, denMax: 6, numMin: 1, numMax: 5, allowImproper: false },
@@ -692,6 +827,33 @@
   function showAutoErr(msg) { const e = $('autoErr'); e.textContent = msg; e.classList.toggle('show', !!msg); }
   function showManualErr(msg) { const e = $('manualErr'); e.textContent = msg; e.classList.toggle('show', !!msg); }
 
+  /* ---- settings persistence ---- */
+  const CONFIG_KEY = 'fracapp.config.v1';
+  function quizModeEnabled() { return $('quizMode').checked; }
+  function saveConfig() {
+    try {
+      const cfg = readAutoConfig();
+      cfg.quizMode = quizModeEnabled();
+      localStorage.setItem(CONFIG_KEY, JSON.stringify(cfg));
+    } catch (e) { /* storage unavailable */ }
+  }
+  function loadConfig() {
+    let cfg;
+    try { cfg = JSON.parse(localStorage.getItem(CONFIG_KEY) || 'null'); } catch (e) { cfg = null; }
+    if (!cfg) return;
+    if (cfg.denMin != null) $('denMin').value = cfg.denMin;
+    if (cfg.denMax != null) $('denMax').value = cfg.denMax;
+    if (cfg.numMin != null) $('numMin').value = cfg.numMin;
+    if (cfg.numMax != null) $('numMax').value = cfg.numMax;
+    if (cfg.count != null) $('probCount').value = cfg.count;
+    if (cfg.allowImproper != null) $('allowImproper').checked = cfg.allowImproper;
+    if (cfg.quizMode != null) $('quizMode').checked = cfg.quizMode;
+    if (Array.isArray(cfg.ops) && cfg.ops.length) {
+      document.querySelectorAll('input[name=op]').forEach((el) => { el.checked = cfg.ops.includes(el.value); });
+    }
+  }
+  $('quizMode').addEventListener('change', saveConfig);
+
   $('genBtn').addEventListener('click', () => {
     showAutoErr('');
     const cfg = readAutoConfig();
@@ -703,9 +865,10 @@
       const p = generateProblem(cfg);
       const built = buildStepsFor(p.op, p.f1, p.f2);
       if (built.error) continue;
-      list.push({ op: p.op, f1: p.f1, f2: p.f2, solved: false });
+      list.push({ op: p.op, f1: p.f1, f2: p.f2, solved: false, attempted: false, correct: null });
     }
     if (list.length === 0) { showAutoErr('ไม่สามารถสร้างโจทย์ได้ด้วยค่าที่กำหนด กรุณาขยายขอบเขตตัวเลข'); return; }
+    saveConfig();
     problems = list;
     manualMode = false;
     renderList();
@@ -721,10 +884,33 @@
     const op = $('manualOp').value;
     const built = buildStepsFor(op, a, b);
     if (built.error) { showManualErr(built.error); return; }
-    problems = [{ op, f1: a, f2: b, solved: false }];
+    problems = [{ op, f1: a, f2: b, solved: false, attempted: false, correct: null }];
     manualMode = true;
     openSolver(0);
   });
+
+  function scoreCounts() {
+    const total = problems.length;
+    const attempted = problems.filter((p) => p.attempted).length;
+    const correct = problems.filter((p) => p.correct).length;
+    return { total, attempted, correct };
+  }
+
+  function updateScoreBar() {
+    const { total, attempted, correct } = scoreCounts();
+    $('scoreAttempted').textContent = attempted + ' / ' + total;
+    $('scoreCorrect').textContent = correct;
+    $('scoreProgress').style.width = (total ? Math.round((attempted / total) * 100) : 0) + '%';
+  }
+
+  function badgeHTML(p) {
+    if (p.attempted) {
+      return p.correct
+        ? '<span class="resultBadge correct">ถูก ✓</span>'
+        : '<span class="resultBadge incorrect">ยังไม่ถูก</span>';
+    }
+    return p.solved ? '<span class="solvedBadge">ดูวิธีทำแล้ว</span>' : '';
+  }
 
   function renderList() {
     $('listHeading').textContent = 'โจทย์ของคุณ (' + problems.length + ' ข้อ)';
@@ -736,12 +922,67 @@
       card.innerHTML =
         '<span class="idx">' + (i + 1) + '</span>' +
         '<span class="expr">' + exprHTML(p.f1, p.op, p.f2) + '</span>' +
-        (p.solved ? '<span class="solvedBadge">แก้แล้ว ✓</span>' : '') +
+        badgeHTML(p) +
         '<button class="btn" type="button">ดูวิธีทำ</button>';
       card.querySelector('button').addEventListener('click', () => openSolver(i));
       grid.appendChild(card);
     });
+    updateScoreBar();
   }
+
+  function renderSummary() {
+    const { total, attempted, correct } = scoreCounts();
+    const pct = attempted ? Math.round((correct / attempted) * 100) : 0;
+    $('summaryPct').textContent = pct + '%';
+    $('summaryAttempted').textContent = attempted + ' / ' + total;
+    $('summaryCorrect').textContent = correct;
+    const list = $('summaryList');
+    list.innerHTML = '';
+    problems.forEach((p, i) => {
+      const row = document.createElement('div');
+      row.className = 'summaryRow';
+      const statusHTML = !p.attempted
+        ? '<span class="status pending">ยังไม่ได้ลอง</span>'
+        : (p.correct ? '<span class="status correct">ถูกต้อง ✓</span>' : '<span class="status incorrect">ยังไม่ถูก ✗</span>');
+      row.innerHTML =
+        '<span class="idx">' + (i + 1) + '</span>' +
+        '<span class="expr">' + exprHTML(p.f1, p.op, p.f2) + '</span>' +
+        statusHTML +
+        '<button class="btn" type="button">ทบทวน</button>';
+      row.querySelector('button').addEventListener('click', () => reviewProblem(i));
+      list.appendChild(row);
+    });
+  }
+
+  $('viewSummaryBtn').addEventListener('click', () => { renderSummary(); showScreen('summary'); });
+  $('summaryBackBtn').addEventListener('click', () => { renderList(); showScreen('list'); });
+  $('summaryNewSetBtn').addEventListener('click', () => { problems = []; showScreen('setup'); });
+
+  $('printBtn').addEventListener('click', () => {
+    const includeKey = $('printIncludeKey').checked;
+    $('pwMeta').textContent = 'จำนวน ' + problems.length + ' ข้อ · สร้างเมื่อ ' + new Date().toLocaleDateString('th-TH');
+    const listEl = $('pwList');
+    listEl.innerHTML = '';
+    problems.forEach((p, i) => {
+      const row = document.createElement('div');
+      row.className = 'pwProblem';
+      row.innerHTML = (i + 1) + '. ' + exprHTML(p.f1, p.op, p.f2) + ' = _______________';
+      listEl.appendChild(row);
+    });
+    $('pwAnswerKey').style.display = includeKey ? '' : 'none';
+    if (includeKey) {
+      const keyList = $('pwAnswerList');
+      keyList.innerHTML = '';
+      problems.forEach((p, i) => {
+        const built = buildStepsFor(p.op, p.f1, p.f2);
+        const row = document.createElement('div');
+        row.className = 'pwProblem';
+        row.innerHTML = (i + 1) + '. ' + mixedDisplay(built.result.n, built.result.d);
+        keyList.appendChild(row);
+      });
+    }
+    window.print();
+  });
 
   function openSolver(index) {
     activeProblemIndex = index;
@@ -753,11 +994,79 @@
     $('breadcrumb').textContent = manualMode ? 'โจทย์ของคุณเอง' : ('โจทย์ที่ ' + (index + 1) + ' จาก ' + problems.length);
     $('backToListBtn').style.display = manualMode ? 'none' : '';
     $('problemExpr').innerHTML = exprHTML(p.f1, p.op, p.f2) + ' <span class="op">=</span> ?';
-    $('stepsWrap').style.display = '';
     $('doneWrap').style.display = 'none';
+    if (quizModeEnabled()) {
+      showAnswerStage();
+    } else {
+      $('answerWrap').style.display = 'none';
+      $('stepsWrap').style.display = '';
+      renderCurrentStep();
+    }
+    showScreen('solver');
+  }
+
+  function reviewProblem(index) {
+    activeProblemIndex = index;
+    const p = problems[index];
+    const built = buildStepsFor(p.op, p.f1, p.f2);
+    activeSteps = built.steps;
+    activeResult = built.result;
+    activeStepIndex = 0;
+    $('breadcrumb').textContent = 'ทบทวนโจทย์ที่ ' + (index + 1) + ' จาก ' + problems.length;
+    $('backToListBtn').style.display = '';
+    $('problemExpr').innerHTML = exprHTML(p.f1, p.op, p.f2) + ' <span class="op">=</span> ?';
+    $('answerWrap').style.display = 'none';
+    $('doneWrap').style.display = 'none';
+    $('stepsWrap').style.display = '';
     renderCurrentStep();
     showScreen('solver');
   }
+
+  function showAnswerStage() {
+    $('stepsWrap').style.display = 'none';
+    $('answerWrap').style.display = '';
+    $('answerInput').value = '';
+    $('answerFeedback').className = 'answerFeedback';
+    $('answerFeedback').innerHTML = '';
+    $('answerActions').innerHTML = '<button class="btn ghost" id="skipToStepsBtn" type="button">ข้ามไปดูวิธีทำ →</button>';
+    $('answerInput').focus();
+  }
+
+  function goToSteps() {
+    $('answerWrap').style.display = 'none';
+    $('stepsWrap').style.display = '';
+    activeStepIndex = 0;
+    renderCurrentStep();
+  }
+
+  function checkAnswer() {
+    const parsed = parseFracInput($('answerInput').value);
+    const fb = $('answerFeedback');
+    if (parsed.error) {
+      fb.className = 'answerFeedback incorrect show';
+      fb.textContent = parsed.error;
+      return;
+    }
+    const isCorrect = parsed.n * activeResult.d === activeResult.n * parsed.d;
+    const p = problems[activeProblemIndex];
+    p.attempted = true;
+    p.correct = isCorrect;
+    if (isCorrect) {
+      fb.className = 'answerFeedback correct show';
+      fb.innerHTML = '🎉 ถูกต้อง! คำตอบคือ <span class="ansExpr">' + mixedDisplay(activeResult.n, activeResult.d) + '</span>';
+    } else {
+      fb.className = 'answerFeedback incorrect show';
+      fb.innerHTML = 'ยังไม่ถูกนะ คำตอบที่ถูกต้องคือ <span class="ansExpr">' + mixedDisplay(activeResult.n, activeResult.d) + '</span> — ลองดูวิธีทำด้านล่าง';
+    }
+    $('answerActions').innerHTML =
+      '<button class="btn primary" id="viewStepsBtn" type="button">ดูวิธีทำทีละขั้น →</button>' +
+      '<button class="btn ghost" id="answerDoneBtn" type="button">เสร็จสิ้นข้อนี้</button>';
+  }
+  $('checkAnswerBtn').addEventListener('click', checkAnswer);
+  $('answerActions').addEventListener('click', (e) => {
+    if (e.target.id === 'skipToStepsBtn' || e.target.id === 'viewStepsBtn') goToSteps();
+    else if (e.target.id === 'answerDoneBtn') finishProblem();
+  });
 
   function renderCurrentStep() {
     const total = activeSteps.length;
@@ -789,6 +1098,7 @@
 
   function finishProblem() {
     if (!manualMode) problems[activeProblemIndex].solved = true;
+    $('answerWrap').style.display = 'none';
     $('stepsWrap').style.display = 'none';
     $('doneWrap').style.display = '';
     $('finalAnswer').innerHTML = mixedDisplay(activeResult.n, activeResult.d);
@@ -803,6 +1113,23 @@
   $('backToListBtn').addEventListener('click', () => { renderList(); showScreen('list'); });
   $('backToSetupBtn').addEventListener('click', () => showScreen('setup'));
   $('resetBtn').addEventListener('click', () => { problems = []; showScreen('setup'); });
+
+  /* ---- keyboard shortcuts ---- */
+  document.addEventListener('keydown', (e) => {
+    const tag = e.target && e.target.tagName;
+    if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') {
+      if (e.key === 'Enter' && e.target.id === 'answerInput') { e.preventDefault(); checkAnswer(); }
+      return;
+    }
+    if (!screens.solver.classList.contains('active')) return;
+    if ($('stepsWrap').style.display === 'none') return;
+    if (e.key === 'ArrowRight') $('nextBtn').click();
+    else if (e.key === 'ArrowLeft' && !$('prevBtn').disabled) $('prevBtn').click();
+  });
+
+  /* ---- init ---- */
+  loadConfig();
+  loadTheme();
 
 })();
 </script>
