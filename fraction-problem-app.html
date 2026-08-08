@@ -950,6 +950,24 @@
     const lcmValue = resultFactors.reduce((a, b) => a * b, 1) || 1;
     return { perNumber, resultFactors, lcm: lcmValue };
   }
+  // ห.ร.ม. via factorization: take each prime at the LOWEST power it appears with among the
+  // numbers (a prime missing from any one number contributes nothing, unlike the LCM's highest-
+  // power rule).
+  function factorizationGcd(nums) {
+    const perNumber = nums.map(primeFactorize);
+    const minCount = {};
+    perNumber.forEach((factors, i) => {
+      const counts = {};
+      factors.forEach((p) => { counts[p] = (counts[p] || 0) + 1; });
+      if (i === 0) { Object.assign(minCount, counts); return; }
+      Object.keys(minCount).forEach((p) => { minCount[p] = Math.min(minCount[p], counts[p] || 0); });
+    });
+    const primes = Object.keys(minCount).map(Number).sort((a, b) => a - b).filter((p) => minCount[p] > 0);
+    const resultFactors = [];
+    primes.forEach((p) => { for (let i = 0; i < minCount[p]; i++) resultFactors.push(p); });
+    const gcdValue = resultFactors.reduce((a, b) => a * b, 1) || 1;
+    return { perNumber, resultFactors, gcd: gcdValue };
+  }
   function needsMixedConversion(n, d) { return d > 1 && n >= d && (n % d !== 0); }
   function mixedParts(n, d) {
     if (d === 1) return { whole: n, rem: 0, den: 1 };
@@ -987,13 +1005,14 @@
 
   function appendSimplifyAndMixedSteps(steps, rawN, rawD) {
     if (rawN === 0) { steps.push({ title: 'ผลลัพธ์เป็นศูนย์', n: 0, d: 1 }); return { n: 0, d: 1 }; }
-    const g = gcd(rawN, rawD);
+    const ladder = gcdLadder([rawN, rawD]);
+    const g = ladder.gcd;
     let finalN = rawN, finalD = rawD;
     if (g > 1) {
       finalN = rawN / g; finalD = rawD / g;
-      steps.push({ title: 'ลดรูปเศษส่วน', g, rawN, rawD, finalN, finalD });
+      steps.push({ title: 'ลดรูปเศษส่วน', g, ladder, rawN, rawD, finalN, finalD });
     } else {
-      steps.push({ title: 'ตรวจสอบการลดรูป', rawN, rawD });
+      steps.push({ title: 'ตรวจสอบการลดรูป', ladder, rawN, rawD });
     }
     if (finalD > 1 && finalN >= finalD && finalN % finalD !== 0) {
       steps.push({ title: 'แปลงเป็นจำนวนผสม', finalN, finalD });
@@ -1240,27 +1259,60 @@
   // renders the "ตั้งหารสั้น" (short-division ladder) method as a table: original numbers on top
   // (underlined like the school notation), one row per divisor used, numbers that weren't
   // divisible that round are dimmed to show they simply carried straight down.
-  function ladderTableHTML(ladder) {
+  function ladderTableRowsHTML(ladder, highlightFinalRow) {
     const headCells = ladder.rows[0].map((v) => '<td>' + v + '</td>').join('');
     let bodyRows = '';
     for (let i = 0; i < ladder.divisors.length; i++) {
       const prev = ladder.rows[i], cur = ladder.rows[i + 1], d = ladder.divisors[i];
-      const isFinal = i === ladder.divisors.length - 1;
+      const isFinal = highlightFinalRow && i === ladder.divisors.length - 1;
       bodyRows += '<tr class="ladderRow' + (isFinal ? ' ladderFinal' : '') + '">' +
         '<td class="ladderDivCell">' + d + '</td>' +
         cur.map((v, j) => '<td' + (prev[j] === v ? ' class="ladderCarry"' : '') + '>' + v + '</td>').join('') +
       '</tr>';
     }
+    return '<div class="ladderTableScroll"><table class="ladderTable">' +
+      '<tr class="ladderRow ladderHead"><td class="ladderDivCell"></td>' + headCells + '</tr>' +
+      bodyRows +
+      '</table></div>';
+  }
+  function ladderTableHTML(ladder) {
     const formulaParts = ladder.divisors.concat(ladder.finalRow.filter((v) => v !== 1));
     const formula = (formulaParts.length ? formulaParts : [1]).join(' × ');
     const note = ladder.divisors.length === 0
       ? '<div class="ladderNote">ไม่มีจำนวนเฉพาะที่หารได้ตั้งแต่สองจำนวนขึ้นไป จึงคูณทุกจำนวนตรง ๆ</div>'
       : '';
-    return '<div class="ladderWrap"><div class="ladderTableScroll"><table class="ladderTable">' +
-      '<tr class="ladderRow ladderHead"><td class="ladderDivCell"></td>' + headCells + '</tr>' +
-      bodyRows +
-      '</table></div>' + note +
+    return '<div class="ladderWrap">' + ladderTableRowsHTML(ladder, true) + note +
       '<div class="ladderFormula">' + formula + ' = <b>' + ladder.lcm + '</b></div></div>';
+  }
+  // ห.ร.ม. via the same short-division ladder, but the divisor must divide EVERY number (not just
+  // at least two), and the result is the product of the divisors alone — the final row is only
+  // there to show the two numbers no longer share a common factor, so it isn't multiplied in.
+  function gcdLadder(nums) {
+    let row = nums.slice();
+    const rows = [row.slice()];
+    const divisors = [];
+    while (true) {
+      const maxVal = Math.max.apply(null, row);
+      let chosen = null;
+      for (let p = 2; p <= maxVal; p++) {
+        if (!isPrime(p)) continue;
+        if (row.every((v) => v % p === 0)) { chosen = p; break; }
+      }
+      if (!chosen) break;
+      row = row.map((v) => v / chosen);
+      divisors.push(chosen);
+      rows.push(row.slice());
+    }
+    const gcdValue = divisors.reduce((a, b) => a * b, 1);
+    return { rows, divisors, finalRow: row, gcd: gcdValue };
+  }
+  function gcdLadderTableHTML(ladder) {
+    const formula = ladder.divisors.length ? ladder.divisors.join(' × ') : '1';
+    const note = ladder.divisors.length === 0
+      ? '<div class="ladderNote">ไม่มีจำนวนเฉพาะที่หารทั้งตัวเศษและตัวส่วนได้ลงตัวพร้อมกัน จึงเป็นเศษส่วนอย่างต่ำอยู่แล้ว</div>'
+      : '<div class="ladderNote">แถวสุดท้ายไม่มีตัวประกอบร่วมกันแล้ว จึงหารต่อไม่ได้อีก — ห.ร.ม. คือผลคูณของตัวหารเท่านั้น</div>';
+    return '<div class="ladderWrap">' + ladderTableRowsHTML(ladder, false) + note +
+      '<div class="ladderFormula">' + formula + ' = <b>' + ladder.gcd + '</b></div></div>';
   }
 
   // plots numbers along a line by true relative value (a float, used for layout only — never
@@ -1476,17 +1528,17 @@
   function renderSimplifyStep(step) {
     return {
       title: 'ลดรูปเศษส่วน',
-      desc: 'หารตัวเศษและตัวส่วนด้วย ห.ร.ม. (' + step.g + ') เพื่อให้ได้เศษส่วนอย่างต่ำ',
+      desc: 'ใช้วิธีตั้งหารสั้นหา ห.ร.ม.: หารตัวเศษและตัวส่วนด้วยจำนวนเฉพาะที่หารทั้งคู่ได้ลงตัว จนกว่าจะหารต่อไม่ได้ แล้วนำตัวหารมาคูณกันเป็น ห.ร.ม. (' + step.g + ') แล้วนำไปหารตัวเศษและตัวส่วน',
       math: fracSpan(step.rawN, step.rawD) + ' <span class="op">÷ ' + step.g + '</span> <span class="arrow">=</span> ' + fracSpan(step.finalN, step.finalD),
-      visual: figure(circleOrBarHTML(step.finalN, step.finalD, 'ภาพเศษส่วนหลังลดรูป ' + step.finalN + ' ใน ' + step.finalD), 'เศษส่วนภายหลังลดรูปแล้ว')
+      visual: figure(gcdLadderTableHTML(step.ladder), 'วิธีตั้งหารสั้นหา ห.ร.ม. ของ ' + step.rawN + ' และ ' + step.rawD)
     };
   }
   function renderCheckSimplifyStep(step) {
     return {
       title: 'ตรวจสอบการลดรูป',
-      desc: 'ห.ร.ม. ของตัวเศษและตัวส่วนเท่ากับ 1 เศษส่วนนี้เป็นเศษส่วนอย่างต่ำอยู่แล้ว',
+      desc: 'ลองหา ห.ร.ม. ด้วยวิธีตั้งหารสั้น — ถ้าไม่มีจำนวนเฉพาะใดหารตัวเศษและตัวส่วนได้ลงตัวพร้อมกันเลย แสดงว่า ห.ร.ม. เท่ากับ 1 และเศษส่วนนี้เป็นเศษส่วนอย่างต่ำอยู่แล้ว',
       math: fracSpan(step.rawN, step.rawD),
-      visual: figure(circleOrBarHTML(step.rawN, step.rawD, 'ภาพเศษส่วน ' + step.rawN + ' ใน ' + step.rawD), 'เศษส่วนนี้ลดรูปแล้วตั้งแต่ต้น')
+      visual: figure(gcdLadderTableHTML(step.ladder), 'ไม่มีตัวหารร่วม จึง ห.ร.ม. = 1 และลดรูปต่อไม่ได้')
     };
   }
   function renderFinalMixedStep(step) {
@@ -1647,10 +1699,39 @@
     return details;
   }
 
+  function gcdLessonCardHTML() {
+    const fa = 42, fb = 56; // factorization method example
+    const factored = factorizationGcd([fa, fb]);
+    const factorLine = (n, factors) => n + ' = ' + factors.join(' × ');
+    const resultLine = (factored.resultFactors.length ? factored.resultFactors.join(' × ') : '1') + ' = <b>' + factored.gcd + '</b>';
+    const ladder = gcdLadder([48, 60]); // division-ladder example
+    const details = document.createElement('details');
+    details.className = 'lessonCard op-lcm';
+    details.innerHTML =
+      '<summary><span class="opBadge">✂️</span><span>วิธีหา ห.ร.ม. (ตัวหารร่วมมาก)</span><span class="lessonTeaser">ใช้ลดรูปเศษส่วน — วิธีเดียวกับ ค.ร.น. แต่ต่างตรงที่ต้องหารได้ครบทุกจำนวน</span><span class="chev">›</span></summary>' +
+      '<div class="lessonBody">' +
+        '<div class="lessonRule"><b>ห.ร.ม. คืออะไร</b>ห.ร.ม. (ตัวหารร่วมมาก) คือจำนวนที่มากที่สุดที่หารจำนวนนับตั้งแต่สองจำนวนขึ้นไปได้ลงตัวพอดีทุกตัว ใช้ลดรูปเศษส่วนให้เป็นเศษส่วนอย่างต่ำ</div>' +
+        '<div class="lessonExampleLabel">วิธีที่ 1: แยกตัวประกอบ</div>' +
+        '<p class="lessonMethodDesc">แยกแต่ละจำนวนเป็นผลคูณของจำนวนเฉพาะ แล้วเลือกเฉพาะจำนวนเฉพาะที่มีอยู่ใน<b>ทุกจำนวน</b> โดยใช้จำนวนครั้งที่ปรากฏ<b>น้อยที่สุด</b> นำมาคูณกัน</p>' +
+        '<div class="factorBlock">' +
+          '<div class="factorLine">' + factorLine(fa, factored.perNumber[0]) + '</div>' +
+          '<div class="factorLine">' + factorLine(fb, factored.perNumber[1]) + '</div>' +
+          '<div class="factorResult">ห.ร.ม. = ' + resultLine + '</div>' +
+        '</div>' +
+        '<div class="lessonExampleLabel">วิธีที่ 2: ตั้งหารสั้น</div>' +
+        '<p class="lessonMethodDesc">หารทุกจำนวนพร้อมกันด้วยจำนวนเฉพาะที่หารได้ลงตัว<b>ทุกจำนวน</b> (ต่างจาก ค.ร.น. ที่หารแค่บางจำนวนก็พอ) ทำซ้ำจนกว่าจะไม่มีจำนวนเฉพาะที่หารได้ครบทุกจำนวนอีก แล้วนำ<b>ตัวหารเท่านั้น</b>มาคูณกันเป็น ห.ร.ม. (ไม่รวมแถวสุดท้าย)</p>' +
+        figure(gcdLadderTableHTML(ladder), 'ตัวอย่าง: หา ห.ร.ม. ของ 48 และ 60') +
+        '<div class="lessonWarn"><b>ข้อควรระวัง</b>อย่าลืมว่า ห.ร.ม. ใช้<b>เฉพาะตัวหาร</b> ไม่รวมแถวสุดท้าย — ตรงข้ามกับ ค.ร.น. ที่ต้องเอาแถวสุดท้ายมาคูณด้วย</div>' +
+        '<div class="lessonFooter"><button class="btn primary" type="button" data-practice-op="mul">ลองฝึกโจทย์ที่ต้องลดรูปเลย →</button></div>' +
+      '</div>';
+    return details;
+  }
+
   function renderLessonExamples() {
     const grid = $('lessonGrid');
     grid.innerHTML = '';
     grid.appendChild(lcmLessonCardHTML());
+    grid.appendChild(gcdLessonCardHTML());
     LESSON_DATA.forEach((lesson, i) => {
       const built = buildStepsFor(lesson.op, lesson.example.f1, lesson.example.f2);
       const stepsHTML = built.steps.map((s, idx) => lessonStepHTML(idx, renderStep(s))).join('');
