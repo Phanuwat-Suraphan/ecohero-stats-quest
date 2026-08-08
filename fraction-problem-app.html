@@ -1052,7 +1052,15 @@
     const low = Math.max(1, cfg.numMin);
     const rawHigh = cfg.allowImproper ? cfg.numMax : Math.min(cfg.numMax, den - 1);
     const high = Math.max(low, rawHigh);
-    return { n: randInt(low, high), d: den };
+    const n = randInt(low, high);
+    // always reduce to lowest terms before returning. Without this, a random draw like
+    // n=18, d=4 displays as the mixed number "4 2/4" (fractional part not in lowest terms —
+    // no textbook would present that), and the extreme case n=4, d=4 displays as the bare
+    // whole number "1" while every downstream step still secretly computes with unreduced 4/4,
+    // making the displayed problem and the worked steps mismatch. Reducing here means what's
+    // shown always matches what's computed, and mixed numbers always have a reduced remainder.
+    const g = gcd(n, den);
+    return { n: n / g, d: den / g };
   }
   function fracValue(f) { return f.n / f.d; }
 
