@@ -213,12 +213,19 @@
   .circleModel{ width:88px; height:88px; border-radius:50%; border:2px solid var(--line-strong); }
   .propBar{ position:relative; width:200px; height:36px; border:2px solid var(--line-strong); border-radius:10px; overflow:hidden; background:var(--paper); }
   .propBar i{ position:absolute; inset:0; width:var(--pct); background:var(--accent); display:block; }
-  .areaGrid{ display:grid; border:2px solid var(--line-strong); border-radius:10px; overflow:hidden; }
-  .areaGrid .cell{ border-right:1px solid var(--line); border-bottom:1px solid var(--line); background:var(--paper); }
-  .areaGrid .cell.col{ background:var(--warm-soft); }
-  .areaGrid .cell.row{ background:var(--accent-soft); }
-  .areaGrid .cell.col.row{ background:var(--accent); }
   .noVisual{ font-size:13px; color:var(--ink-soft); font-weight:600; }
+
+  /* nested subdividing bar: each segment of fraction B splits into fraction A's own pattern */
+  .nestedStack{ display:flex; flex-direction:column; gap:4px; align-items:center; }
+  .nestedBar{ display:flex; gap:3px; flex-wrap:wrap; justify-content:center; }
+  .nestedGroup{ display:flex; gap:1px; border:2px solid var(--line-strong); border-radius:7px; overflow:hidden; padding:2px; background:var(--paper); transform-origin:center; }
+  .nestedGroup.inactive{ opacity:.4; }
+  .nestedCell{ width:7px; height:32px; border-radius:1px; background:var(--paper); }
+  .nestedCell.on{ background:var(--accent); }
+  @media (prefers-reduced-motion: no-preference){
+    .nestedGroup{ animation:nestedReveal .32s cubic-bezier(.34,1.56,.64,1) both; animation-delay:var(--delay); }
+    @keyframes nestedReveal{ from{ transform:scaleY(.15); opacity:0; } to{ transform:scaleY(1); opacity:1; } }
+  }
 
   .navRow{ display:flex; align-items:center; justify-content:space-between; margin-top:22px; gap:10px; }
   .navRow .spacer{ flex:1; }
@@ -800,21 +807,50 @@
     const pct = Math.min(100, (n / d) * 100);
     return '<div class="circleModel" role="img" aria-label="' + escAttr(label) + '" style="background:conic-gradient(var(--accent) 0 ' + pct + '%, var(--paper) 0 100%);"></div>';
   }
-  function areaGridHTML(n1, d1, n2, d2) {
-    let cells = '';
-    for (let r = 0; r < d2; r++) {
-      for (let c = 0; c < d1; c++) {
-        const cls = (c < n1 ? ' col' : '') + (r < n2 ? ' row' : '');
-        cells += '<div class="cell' + cls + '"></div>';
-      }
-    }
-    const label = 'ตารางแสดง ' + n1 + ' ใน ' + d1 + ' ส่วน คูณกับ ' + n2 + ' ใน ' + d2 + ' ส่วน พื้นที่ทับซ้อนคือคำตอบ';
-    return '<div class="areaGrid" role="img" aria-label="' + escAttr(label) + '" style="grid-template-columns:repeat(' + d1 + ',18px); grid-template-rows:repeat(' + d2 + ',18px);">' + cells + '</div>';
+  // shared "up to 2 whole bars + one remainder bar" decomposition (same rule barModelHTML uses),
+  // exposed so the nested subdividing-bar visual can reuse it for both dimensions.
+  function barRecords(n, d) {
+    const wholeBars = Math.floor(n / d), rem = n - wholeBars * d;
+    const bars = [];
+    const count = Math.min(wholeBars, 2);
+    for (let b = 0; b < count; b++) bars.push({ segments: d, filled: d });
+    if (rem > 0 || bars.length === 0) bars.push({ segments: d, filled: rem });
+    return { bars, truncated: wholeBars > 2 };
   }
-  function productVisualHTML(n1, d1, n2, d2, prodN, prodD) {
-    // the area-grid model only reads correctly when both factors are proper fractions (< 1)
-    const bothProper = n1 < d1 && n2 < d2;
-    if (bothProper && d1 * d2 <= 100) return areaGridHTML(n1, d1, n2, d2);
+
+  // "n1/d1 subdivides each segment of n2/d2": every segment of B's own bar(s) is replaced by a
+  // small copy of A's bar pattern, revealed one segment at a time. Falls back (returns null) when
+  // either side needed more than 2 whole bars to represent, or the resulting grid would be too
+  // dense to read.
+  function nestedBarHTML(n1, d1, n2, d2, label) {
+    const a = barRecords(n1, d1);
+    const b = barRecords(n2, d2);
+    const aCells = a.bars.reduce((s, x) => s + x.segments, 0);
+    const bSegments = b.bars.reduce((s, x) => s + x.segments, 0);
+    if (a.truncated || b.truncated || aCells * bSegments > 150) return null;
+    let delayIdx = 0;
+    const rows = b.bars.map(function (bBar) {
+      let groups = '';
+      for (let i = 0; i < bBar.segments; i++) {
+        const isActive = i < bBar.filled;
+        let cells = '';
+        a.bars.forEach(function (aBar) {
+          for (let c = 0; c < aBar.segments; c++) {
+            cells += '<div class="nestedCell' + (isActive && c < aBar.filled ? ' on' : '') + '"></div>';
+          }
+        });
+        groups += '<div class="nestedGroup' + (isActive ? '' : ' inactive') + '" style="--delay:' + (delayIdx * 60) + 'ms">' + cells + '</div>';
+        delayIdx++;
+      }
+      return '<div class="nestedBar">' + groups + '</div>';
+    }).join('');
+    return '<div class="nestedStack" role="img" aria-label="' + escAttr(label) + '">' + rows + '</div>';
+  }
+
+  function multiplyVisualHTML(n1, d1, n2, d2, prodN, prodD) {
+    const label = 'แบ่งแต่ละช่องของ ' + n2 + ' ใน ' + d2 + ' ด้วยเศษส่วน ' + n1 + ' ใน ' + d1 + ' ช่องเล็กที่เติมสีทั้งหมดคือคำตอบ';
+    const nested = nestedBarHTML(n1, d1, n2, d2, label);
+    if (nested) return nested;
     return '<div class="barPair">' +
       '<div class="barUnit">' + barModelHTML(n1, d1, 'แถบแบ่งส่วน ' + n1 + ' ต่อ ' + d1) + '<span class="barLabel">' + fracSpan(n1, d1) + '</span></div>' +
       '<div class="barUnit">' + barModelHTML(n2, d2, 'แถบแบ่งส่วน ' + n2 + ' ต่อ ' + d2, true) + '<span class="barLabel">' + fracSpan(n2, d2) + '</span></div>' +
@@ -887,7 +923,7 @@
       title: 'คูณเศษกับเศษ ส่วนกับส่วน',
       desc: 'ในการคูณเศษส่วน ให้คูณตัวเศษทั้งสองเข้าด้วยกัน และคูณตัวส่วนทั้งสองเข้าด้วยกัน',
       math: fracSpan(step.f1.n, step.f1.d) + ' <span class="op">×</span> ' + fracSpan(step.f2.n, step.f2.d) + ' <span class="arrow">=</span> ' + fracSpan(step.prodN, step.prodD),
-      visual: figure(productVisualHTML(step.f1.n, step.f1.d, step.f2.n, step.f2.d, step.prodN, step.prodD), 'ตารางพื้นที่หรือแถบเปรียบเทียบที่แสดงผลคูณของเศษส่วนทั้งสอง')
+      visual: figure(multiplyVisualHTML(step.f1.n, step.f1.d, step.f2.n, step.f2.d, step.prodN, step.prodD), 'แบ่งแต่ละช่องของเศษส่วนที่สองด้วยเศษส่วนแรก แล้วนับช่องเล็กที่เติมสีทั้งหมด')
     };
   }
   function renderReciprocalStep(step) {
@@ -909,7 +945,7 @@
       title: 'คูณด้วยส่วนกลับ',
       desc: 'การหารเศษส่วน เท่ากับการคูณด้วยส่วนกลับของตัวหาร',
       math: fracSpan(step.f1.n, step.f1.d) + ' <span class="op">×</span> ' + fracSpan(step.recip.n, step.recip.d) + ' <span class="arrow">=</span> ' + fracSpan(step.prodN, step.prodD),
-      visual: figure(productVisualHTML(step.f1.n, step.f1.d, step.recip.n, step.recip.d, step.prodN, step.prodD), 'ตารางพื้นที่หรือแถบเปรียบเทียบของการคูณด้วยส่วนกลับ')
+      visual: figure(multiplyVisualHTML(step.f1.n, step.f1.d, step.recip.n, step.recip.d, step.prodN, step.prodD), 'แบ่งแต่ละช่องของส่วนกลับด้วยเศษส่วนแรก แล้วนับช่องเล็กที่เติมสีทั้งหมด')
     };
   }
   function renderZeroStep() {
