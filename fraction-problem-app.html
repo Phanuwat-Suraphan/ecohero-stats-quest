@@ -279,7 +279,7 @@
 
   /* nested subdividing bar: each segment of fraction B splits into fraction A's own pattern */
   .nestedStack{ display:flex; flex-direction:column; gap:4px; align-items:center; }
-  .nestedIntro{ display:flex; align-items:center; gap:14px; margin-bottom:6px; }
+  .nestedIntro{ display:flex; align-items:center; justify-content:center; gap:14px; margin-bottom:6px; flex-wrap:wrap; }
   .nestedIntroTimes{ font-size:17px; font-weight:800; color:var(--ink-soft); }
   .nestedIntroArrow{ font-size:11px; font-weight:700; color:var(--accent-ink); margin-bottom:10px; text-align:center; }
   .nestedBar{ display:flex; gap:3px; flex-wrap:wrap; justify-content:center; }
@@ -330,6 +330,11 @@
   .scoreBar{ display:flex; align-items:center; gap:22px; background:var(--paper-raised); border:2px solid var(--line); border-radius:16px; padding:14px 20px; margin-bottom:20px; flex-wrap:wrap; box-shadow:var(--shadow); }
   .scoreBar .scoreStat{ font-size:12.5px; color:var(--ink-soft); white-space:nowrap; font-weight:700; }
   .scoreBar .scoreStat b{ color:var(--ink); font-size:18px; display:block; font-variant-numeric:tabular-nums; }
+  .streakStat{ background:var(--warm-soft); border-radius:12px; padding:6px 12px; }
+  .streakStat b{ color:var(--warm); }
+  .streakStat.hot{ background:linear-gradient(135deg, var(--warm-soft), color-mix(in srgb, var(--warm) 30%, var(--warm-soft))); }
+  @media (prefers-reduced-motion: no-preference){ .streakStat.hot b{ animation:streakPulse 1s ease-in-out infinite; } }
+  @keyframes streakPulse{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.12); } }
   .progressTrack{ height:8px; border-radius:6px; background:var(--line); overflow:hidden; flex:1 1 140px; min-width:100px; }
   .progressTrack i{ display:block; height:100%; background:linear-gradient(90deg,var(--accent),var(--op-sub)); border-radius:6px; transition:width .4s cubic-bezier(.34,1.2,.64,1); }
   .probCard .resultBadge{ font-size:11px; font-weight:800; padding:4px 10px; border-radius:20px; white-space:nowrap; }
@@ -344,6 +349,17 @@
   .scoreCircle b, .scoreCircle span{ position:relative; z-index:1; }
   .scoreCircle b{ font-size:24px; line-height:1.2; color:var(--accent-ink); }
   .scoreCircle span{ font-size:10.5px; color:var(--ink-soft); font-weight:700; }
+  .medalCard{ display:flex; align-items:center; gap:16px; background:var(--paper-raised); border:2px solid var(--line); border-radius:16px; padding:16px 20px; margin-bottom:22px; box-shadow:var(--shadow); }
+  .medalIcon{ flex:0 0 auto; width:56px; height:56px; }
+  .medalIcon.gold{ color:#e8a716; }
+  .medalIcon.silver{ color:#9aa4b2; }
+  .medalIcon.bronze{ color:#b6713d; }
+  .medalIcon.try{ color:var(--accent); }
+  .medalText{ display:flex; flex-direction:column; gap:2px; }
+  .medalText b{ font-size:16px; color:var(--ink); }
+  .medalText span{ font-size:13px; color:var(--ink-soft); }
+  @media (prefers-reduced-motion: no-preference){ .medalCard{ animation:medalPop .35s cubic-bezier(.34,1.56,.64,1) both; } }
+  @keyframes medalPop{ from{ transform:scale(.85); opacity:0; } to{ transform:scale(1); opacity:1; } }
   .summaryList{ display:grid; gap:8px; margin-bottom:26px; }
   .summaryRow{ display:flex; align-items:center; gap:14px; background:var(--paper-raised); border:2px solid var(--line); border-radius:14px; padding:11px 16px; }
   .summaryRow .idx{ font-size:11.5px; color:var(--ink-soft); font-weight:800; flex:0 0 18px; }
@@ -665,6 +681,7 @@
     <div class="scoreBar">
       <div class="scoreStat"><b id="scoreAttempted">0 / 0</b>ข้อที่ลองตอบ</div>
       <div class="scoreStat"><b id="scoreCorrect">0</b>ตอบถูก</div>
+      <div class="scoreStat streakStat" id="streakStat" style="display:none;"><b id="scoreStreak">0</b>ถูกติดกัน 🔥</div>
       <div class="progressTrack"><i id="scoreProgress" style="width:0%"></i></div>
       <button class="btn" id="viewSummaryBtn" type="button">สรุปผล</button>
     </div>
@@ -815,6 +832,11 @@
       <div class="scoreCircle"><b id="summaryPct">0%</b><span>ความแม่นยำ</span></div>
       <div class="scoreStat"><b id="summaryAttempted">0 / 0</b>ข้อที่ลองตอบ</div>
       <div class="scoreStat"><b id="summaryCorrect">0</b>ตอบถูก</div>
+      <div class="scoreStat"><b id="summaryStreak">0</b>ถูกติดกันสูงสุด</div>
+    </div>
+    <div class="medalCard" id="medalCard" style="display:none;">
+      <div class="medalIcon" id="medalIcon"></div>
+      <div class="medalText"><b id="medalTitle"></b><span id="medalDesc"></span></div>
     </div>
     <div class="summaryList" id="summaryList"></div>
     <div class="summaryActions">
@@ -957,8 +979,19 @@
     return { op, f1, f2 };
   }
 
+  // compare/order mode is explicitly about mixing fractions, whole numbers, and mixed numbers —
+  // so give whole numbers a real chance to appear even when the denominator range excludes 1
+  // (denMin defaults to 2, which otherwise makes whole numbers unreachable without a manual tweak).
+  function generateCompareOrderOperand(cfg) {
+    if (Math.random() < 0.22) {
+      const low = Math.max(1, cfg.numMin), high = Math.max(low, Math.min(cfg.numMax, 12));
+      return { n: randInt(low, high), d: 1 };
+    }
+    return generateOperand(cfg);
+  }
+
   function generateCompareProblem(cfg) {
-    return { f1: generateOperand(cfg), f2: generateOperand(cfg) };
+    return { f1: generateCompareOrderOperand(cfg), f2: generateCompareOrderOperand(cfg) };
   }
 
   // generates `count` numbers with distinct values (no ties), or null if it can't within the budget
@@ -968,7 +1001,7 @@
     let attempts = 0;
     while (list.length < count && attempts < count * 60) {
       attempts++;
-      const f = generateOperand(cfg);
+      const f = generateCompareOrderOperand(cfg);
       const val = fracValue(f);
       if (seenValues.some((v) => Math.abs(v - val) < 1e-9)) continue;
       seenValues.push(val);
@@ -1504,6 +1537,8 @@
   let manualMode = false;
   let problemType = 'compute';
   let orderUserSequence = [];
+  let currentStreak = 0;
+  let bestStreak = 0;
 
   function buildProblemSteps(p) {
     if (p.type === 'compare') { const r = buildCompareSteps(p.f1, p.f2); return { steps: r.steps, result: null, relation: r.relation, order: null }; }
@@ -1622,6 +1657,8 @@
     saveConfig();
     problems = list;
     manualMode = false;
+    currentStreak = 0;
+    bestStreak = 0;
     renderList();
     showScreen('list');
   });
@@ -1637,6 +1674,8 @@
     if (built.error) { showManualErr(built.error); return; }
     problems = [{ type: 'compute', op, f1: a, f2: b, solved: false, attempted: false, correct: null }];
     manualMode = true;
+    currentStreak = 0;
+    bestStreak = 0;
     openSolver(0);
   });
 
@@ -1652,6 +1691,9 @@
     $('scoreAttempted').textContent = attempted + ' / ' + total;
     $('scoreCorrect').textContent = correct;
     $('scoreProgress').style.width = (total ? Math.round((attempted / total) * 100) : 0) + '%';
+    $('streakStat').style.display = currentStreak >= 2 ? '' : 'none';
+    $('scoreStreak').textContent = currentStreak;
+    $('streakStat').classList.toggle('hot', currentStreak >= 5);
   }
 
   function badgeHTML(p) {
@@ -1681,12 +1723,36 @@
     updateScoreBar();
   }
 
+  const MEDAL_SVG = '<svg viewBox="0 0 64 64" width="56" height="56" aria-hidden="true">' +
+    '<path d="M20 38 L13 58 L23 52 L29 60 L23 40 Z" fill="currentColor" opacity=".85"/>' +
+    '<path d="M44 38 L51 58 L41 52 L35 60 L41 40 Z" fill="currentColor" opacity=".85"/>' +
+    '<circle cx="32" cy="27" r="19" fill="currentColor"/>' +
+    '<path d="M32 16 L35 23 L43 24 L37 29.5 L38.5 37 L32 33 L25.5 37 L27 29.5 L21 24 L29 23 Z" fill="var(--paper-raised)"/>' +
+  '</svg>';
+  function pickMedal(pct, attempted, total) {
+    if (attempted === 0) return null;
+    if (pct >= 90) return { tier: 'gold', title: '🥇 เหรียญทอง!', desc: attempted === total ? 'สุดยอด! ตอบถูกเกือบหมดทุกข้อเลย เก่งมากๆ' : 'เก่งมาก! ลองทำให้ครบทุกข้อดูนะ' };
+    if (pct >= 70) return { tier: 'silver', title: '🥈 เหรียญเงิน!', desc: 'เก่งมาก ฝึกอีกนิดจะแม่นขึ้นอีกเยอะเลย' };
+    if (pct >= 40) return { tier: 'bronze', title: '🥉 เหรียญทองแดง!', desc: 'ทำได้ดีนะ ลองทบทวนวิธีทำแล้วฝึกอีกครั้ง' };
+    return { tier: 'try', title: '💪 ลองอีกครั้งนะ', desc: 'ทบทวนวิธีทำในแต่ละข้อ แล้วลองใหม่อีกรอบ เธอทำได้แน่นอน!' };
+  }
+
   function renderSummary() {
     const { total, attempted, correct } = scoreCounts();
     const pct = attempted ? Math.round((correct / attempted) * 100) : 0;
     $('summaryPct').textContent = pct + '%';
     $('summaryAttempted').textContent = attempted + ' / ' + total;
     $('summaryCorrect').textContent = correct;
+    $('summaryStreak').textContent = bestStreak;
+    const medal = pickMedal(pct, attempted, total);
+    $('medalCard').style.display = medal ? '' : 'none';
+    if (medal) {
+      $('medalCard').className = 'medalCard ' + medal.tier;
+      $('medalIcon').className = 'medalIcon ' + medal.tier;
+      $('medalIcon').innerHTML = MEDAL_SVG;
+      $('medalTitle').textContent = medal.title;
+      $('medalDesc').textContent = medal.desc;
+    }
     const list = $('summaryList');
     list.innerHTML = '';
     problems.forEach((p, i) => {
@@ -1799,6 +1865,7 @@
   ];
   const MASCOT_CORRECT = ['เก่งมากก! ตอบถูกเป๊ะ 🎉', 'ใช่เลย! เธอทำถูกต้องแล้ว', 'สุดยอด! คิดออกเองด้วย'];
   const MASCOT_INCORRECT = ['ไม่เป็นไรนะ ลองดูวิธีทำด้วยกันเลย', 'เกือบแล้ว! มาดูขั้นตอนกันนะ', 'ไม่ถูกก็ไม่เป็นไร ลองดูวิธีทำกัน แล้วจะเข้าใจ'];
+  const MASCOT_STREAK = { 3: '🔥 ถูกติดกัน 3 ข้อแล้ว! ไปต่อกันเลย', 5: '🔥🔥 5 ข้อรวด! เธอเก่งมากจริงๆ', 10: '🔥🔥🔥 สุดยอด! ถูกรวด 10 ข้อ! เธอคือแชมป์เศษส่วน!' };
   function pickRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
   function sayBubble(el, text) {
     el.textContent = text;
@@ -1884,13 +1951,24 @@
 
   function applyAnswerResult(isCorrect, correctAnswerHTML) {
     const p = problems[activeProblemIndex];
+    const wasAttempted = p.attempted;
+    const wasCorrect = p.correct;
     p.attempted = true;
     p.correct = isCorrect;
+    // only advance the streak the first time this problem is answered, so re-checking after
+    // reviewing steps (or revisiting from the summary screen) can't inflate it
+    if (!wasAttempted) {
+      if (isCorrect) { currentStreak++; bestStreak = Math.max(bestStreak, currentStreak); }
+      else { currentStreak = 0; }
+    } else if (wasCorrect && !isCorrect) {
+      currentStreak = 0;
+    }
     const fb = $('answerFeedback');
     if (isCorrect) {
       fb.className = 'answerFeedback correct show';
       fb.innerHTML = '🎉 ถูกต้อง! คำตอบคือ <span class="ansExpr">' + correctAnswerHTML + '</span>';
-      sayBubble($('answerSpeech'), pickRandom(MASCOT_CORRECT));
+      const streakMsg = !wasAttempted && MASCOT_STREAK[currentStreak];
+      sayBubble($('answerSpeech'), streakMsg || pickRandom(MASCOT_CORRECT));
     } else {
       fb.className = 'answerFeedback incorrect show';
       fb.innerHTML = 'ยังไม่ถูกนะ คำตอบที่ถูกต้องคือ <span class="ansExpr">' + correctAnswerHTML + '</span> — ลองดูวิธีทำด้านล่าง';
