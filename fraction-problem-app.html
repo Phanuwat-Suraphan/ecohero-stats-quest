@@ -358,6 +358,16 @@
     .sparkle:nth-child(4){ animation-delay:.75s; }
     @keyframes twinkle{ 0%,100%{ transform:scale(.7) rotate(0deg); opacity:.5; } 50%{ transform:scale(1.15) rotate(20deg); opacity:1; } }
   }
+
+  /* mascot as teaching companion, with a speech bubble */
+  .mascotTeach{ display:flex; align-items:center; gap:14px; margin-bottom:18px; }
+  .mascotTeach .mascotHero{ width:66px; height:66px; }
+  .speechBubble{ position:relative; background:var(--paper-raised); border:2px solid var(--line-strong); border-radius:16px; padding:12px 18px; font-size:13.8px; font-weight:700; color:var(--ink); box-shadow:var(--shadow); flex:1 1 auto; }
+  .speechBubble::before{ content:""; position:absolute; left:-9px; bottom:18px; width:15px; height:15px; background:var(--paper-raised); border-left:2px solid var(--line-strong); border-bottom:2px solid var(--line-strong); transform:rotate(45deg); border-radius:0 0 0 3px; }
+  @media (prefers-reduced-motion: no-preference){
+    .speechBubble.pop{ animation:bubbleIn .3s cubic-bezier(.34,1.56,.64,1) both; }
+    @keyframes bubbleIn{ from{ transform:scale(.85); opacity:0; } to{ transform:scale(1); opacity:1; } }
+  }
 </style>
 
 <div class="bgBlobs" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
@@ -496,6 +506,27 @@
     </div>
 
     <div class="tabPanel" id="panel-lesson" role="tabpanel">
+      <div class="mascotTeach">
+        <svg class="mascotHero" viewBox="0 0 100 100" role="img" aria-label="น้องเศษใส่หมวกครุยมาสอน" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="50" cy="54" r="38" fill="var(--accent)"/>
+          <circle cx="14" cy="58" r="8" fill="var(--accent)"/>
+          <circle cx="86" cy="58" r="8" fill="var(--accent)"/>
+          <circle cx="34" cy="50" r="10" fill="#fff"/>
+          <circle cx="66" cy="50" r="10" fill="#fff"/>
+          <circle cx="36" cy="51" r="4.6" fill="#1a2436"/>
+          <circle cx="68" cy="51" r="4.6" fill="#1a2436"/>
+          <circle cx="34.5" cy="48.5" r="1.5" fill="#fff"/>
+          <circle cx="66.5" cy="48.5" r="1.5" fill="#fff"/>
+          <ellipse cx="24" cy="64" rx="6.5" ry="3.6" fill="#fff" opacity=".4"/>
+          <ellipse cx="76" cy="64" rx="6.5" ry="3.6" fill="#fff" opacity=".4"/>
+          <path d="M36 68 Q50 80 64 68" stroke="#1a2436" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+          <path d="M50 4 L80 17 L50 30 L20 17 Z" fill="#1a2436"/>
+          <rect x="47" y="17" width="6" height="8" fill="#1a2436"/>
+          <path d="M80 17 L80 30" stroke="#1a2436" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="80" cy="32" r="3" fill="var(--warm)"/>
+        </svg>
+        <div class="speechBubble pop">สวัสดี! ครูน้องเศษจะพาไปเรียนรู้กฎเศษส่วนแต่ละแบบกันนะ ลองกดที่การ์ดด้านล่างเพื่อดูตัวอย่างได้เลย 🎓</div>
+      </div>
       <div class="card lessonPrimer">
         <h3>พื้นฐานที่ควรรู้ก่อน</h3>
         <dl class="primerList">
@@ -551,6 +582,23 @@
 
     <div id="answerWrap">
       <div class="card answerCard">
+        <div class="mascotTeach">
+          <svg class="mascotHero" viewBox="0 0 100 100" role="img" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="50" cy="54" r="38" fill="var(--accent)"/>
+            <circle cx="14" cy="58" r="8" fill="var(--accent)"/>
+            <circle cx="86" cy="58" r="8" fill="var(--accent)"/>
+            <circle cx="34" cy="50" r="10" fill="#fff"/>
+            <circle cx="66" cy="50" r="10" fill="#fff"/>
+            <circle cx="36" cy="51" r="4.6" fill="#1a2436"/>
+            <circle cx="68" cy="51" r="4.6" fill="#1a2436"/>
+            <circle cx="34.5" cy="48.5" r="1.5" fill="#fff"/>
+            <circle cx="66.5" cy="48.5" r="1.5" fill="#fff"/>
+            <ellipse cx="24" cy="64" rx="6.5" ry="3.6" fill="#fff" opacity=".4"/>
+            <ellipse cx="76" cy="64" rx="6.5" ry="3.6" fill="#fff" opacity=".4"/>
+            <path d="M36 68 Q50 80 64 68" stroke="#1a2436" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+          </svg>
+          <div class="speechBubble" id="answerSpeech">ลองตอบดูสิ เธอทำได้แน่นอน!</div>
+        </div>
         <h3>ลองคิดคำตอบเองก่อนดูวิธีทำ</h3>
         <p class="hint">พิมพ์คำตอบในรูปแบบ 3/4, 1 2/3 หรือ 5 แล้วกดตรวจคำตอบ</p>
         <div class="answerRow">
@@ -1340,6 +1388,22 @@
     showScreen('solver');
   }
 
+  const MASCOT_OPENERS = [
+    'ลองตอบดูสิ เธอทำได้แน่นอน!',
+    'มาดูซิว่าใครคิดออกก่อน!',
+    'คิดในใจก่อนนะ แล้วค่อยพิมพ์คำตอบ',
+    'พร้อมหรือยัง? ลองดูเลย!'
+  ];
+  const MASCOT_CORRECT = ['เก่งมากก! ตอบถูกเป๊ะ 🎉', 'ใช่เลย! เธอทำถูกต้องแล้ว', 'สุดยอด! คิดออกเองด้วย'];
+  const MASCOT_INCORRECT = ['ไม่เป็นไรนะ ลองดูวิธีทำด้วยกันเลย', 'เกือบแล้ว! มาดูขั้นตอนกันนะ', 'ไม่ถูกก็ไม่เป็นไร ลองดูวิธีทำกัน แล้วจะเข้าใจ'];
+  function pickRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+  function sayBubble(el, text) {
+    el.textContent = text;
+    el.classList.remove('pop');
+    void el.offsetWidth; // force reflow so the pop animation re-triggers
+    el.classList.add('pop');
+  }
+
   function showAnswerStage() {
     $('stepsWrap').style.display = 'none';
     $('answerWrap').style.display = '';
@@ -1347,6 +1411,7 @@
     $('answerFeedback').className = 'answerFeedback';
     $('answerFeedback').innerHTML = '';
     $('answerActions').innerHTML = '<button class="btn ghost" id="skipToStepsBtn" type="button">ข้ามไปดูวิธีทำ →</button>';
+    sayBubble($('answerSpeech'), pickRandom(MASCOT_OPENERS));
     $('answerInput').focus();
   }
 
@@ -1372,9 +1437,11 @@
     if (isCorrect) {
       fb.className = 'answerFeedback correct show';
       fb.innerHTML = '🎉 ถูกต้อง! คำตอบคือ <span class="ansExpr">' + mixedDisplay(activeResult.n, activeResult.d) + '</span>';
+      sayBubble($('answerSpeech'), pickRandom(MASCOT_CORRECT));
     } else {
       fb.className = 'answerFeedback incorrect show';
       fb.innerHTML = 'ยังไม่ถูกนะ คำตอบที่ถูกต้องคือ <span class="ansExpr">' + mixedDisplay(activeResult.n, activeResult.d) + '</span> — ลองดูวิธีทำด้านล่าง';
+      sayBubble($('answerSpeech'), pickRandom(MASCOT_INCORRECT));
     }
     $('answerActions').innerHTML =
       '<button class="btn primary" id="viewStepsBtn" type="button">ดูวิธีทำทีละขั้น →</button>' +
