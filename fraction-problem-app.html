@@ -153,8 +153,18 @@
   .errBox.show{ display:block; }
 
   .manualRow{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
-  .manualRow input[type=text]{ flex:1 1 160px; min-width:120px; border:2px solid var(--line-strong); border-radius:12px; padding:11px 12px; background:var(--paper); color:var(--ink); font-size:16px; font-weight:700; }
   .manualRow select{ border:2px solid var(--line-strong); border-radius:12px; padding:11px 10px; background:var(--paper); color:var(--ink); font-size:18px; flex:0 0 auto; font-weight:700; }
+
+  /* fraction input widget: type numbers straight into num/den boxes, no slash typing */
+  .fracWidget{ display:inline-flex; align-items:center; gap:6px; }
+  .fiBox{ width:52px; height:44px; border:2.5px solid var(--line-strong); border-radius:12px; background:var(--paper-raised); color:var(--ink); font-size:19px; font-weight:800; text-align:center; font-variant-numeric:tabular-nums; -moz-appearance:textfield; transition:border-color .15s ease, box-shadow .15s ease, transform .15s ease; }
+  .fiBox::-webkit-outer-spin-button, .fiBox::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
+  .fiBox::placeholder{ color:var(--ink-soft); opacity:.5; font-weight:700; }
+  .fiBox:focus{ outline:none; border-color:var(--accent); box-shadow:0 0 0 4px var(--accent-soft), 0 0 18px 3px color-mix(in srgb, var(--accent) 60%, transparent); transform:translateY(-1px); }
+  .fracWidget .fiWhole{ width:42px; }
+  .fracWidget .fiFrac{ display:inline-flex; flex-direction:column; align-items:center; gap:3px; }
+  .fracWidget .fiBar{ width:38px; height:3px; border-radius:2px; background:linear-gradient(90deg,var(--op-add),var(--op-mul)); }
+  .fracWidgetLabel{ font-size:10.5px; color:var(--ink-soft); font-weight:700; text-align:center; margin-top:2px; }
 
   /* fraction typography: rounded body font with tabular numerals, not techy monospace */
   .frac{ display:inline-flex; flex-direction:column; align-items:center; vertical-align:middle; margin:0 .14em; font-family:var(--font-body); font-variant-numeric:tabular-nums; font-weight:800; line-height:1.05; }
@@ -217,6 +227,9 @@
 
   /* nested subdividing bar: each segment of fraction B splits into fraction A's own pattern */
   .nestedStack{ display:flex; flex-direction:column; gap:4px; align-items:center; }
+  .nestedIntro{ display:flex; align-items:center; gap:14px; margin-bottom:6px; }
+  .nestedIntroTimes{ font-size:17px; font-weight:800; color:var(--ink-soft); }
+  .nestedIntroArrow{ font-size:11px; font-weight:700; color:var(--accent-ink); margin-bottom:10px; text-align:center; }
   .nestedBar{ display:flex; gap:3px; flex-wrap:wrap; justify-content:center; }
   .nestedGroup{ display:flex; gap:1px; border:2px solid var(--line-strong); border-radius:7px; overflow:hidden; padding:2px; background:var(--paper); transform-origin:center; }
   .nestedGroup.inactive{ opacity:.4; }
@@ -225,6 +238,8 @@
   @media (prefers-reduced-motion: no-preference){
     .nestedGroup{ animation:nestedReveal .32s cubic-bezier(.34,1.56,.64,1) both; animation-delay:var(--delay); }
     @keyframes nestedReveal{ from{ transform:scaleY(.15); opacity:0; } to{ transform:scaleY(1); opacity:1; } }
+    .nestedIntroArrow{ animation:arrowPulse 1.1s ease-in-out infinite; }
+    @keyframes arrowPulse{ 0%,100%{ opacity:.5; transform:translateY(0); } 50%{ opacity:1; transform:translateY(3px); } }
   }
 
   .navRow{ display:flex; align-items:center; justify-content:space-between; margin-top:22px; gap:10px; }
@@ -251,8 +266,7 @@
   /* quiz answer stage */
   .answerCard h3{ font-size:17px; margin-bottom:4px; }
   .answerCard .hint{ font-size:13px; color:var(--ink-soft); margin-bottom:16px; font-weight:600; }
-  .answerRow{ display:flex; gap:10px; flex-wrap:wrap; }
-  .answerRow input[type=text]{ flex:1 1 160px; border:2px solid var(--line-strong); border-radius:12px; padding:11px 12px; background:var(--paper); color:var(--ink); font-size:18px; font-weight:700; }
+  .answerRow{ display:flex; gap:14px; flex-wrap:wrap; align-items:center; }
   .answerFeedback{ margin-top:16px; padding:14px 16px; border-radius:14px; font-size:14px; display:none; align-items:center; gap:8px; flex-wrap:wrap; font-weight:700; }
   .answerFeedback.show{ display:flex; }
   .answerFeedback.correct{ background:var(--accent-soft); color:var(--accent-ink); }
@@ -489,16 +503,30 @@
 
     <div class="tabPanel" id="panel-manual" role="tabpanel">
       <div class="card">
-        <p class="lede" style="margin-bottom:16px;">พิมพ์เศษส่วนในรูปแบบ <code>3/4</code>, จำนวนผสม <code>2 1/3</code>, หรือจำนวนเต็ม <code>5</code></p>
+        <p class="lede" style="margin-bottom:16px;">ใส่ตัวเลขลงในแต่ละช่องได้เลย — ช่องซ้ายสุดสำหรับจำนวนเต็ม (ถ้าเป็นจำนวนผสม) เว้นว่างได้ถ้าไม่มี</p>
         <div class="manualRow">
-          <input type="text" id="manualA" placeholder="เช่น 2 1/3" inputmode="text">
+          <div class="fracWidget" id="manualAWidget">
+            <input type="number" class="fiBox fiWhole" min="0" inputmode="numeric" placeholder="0" aria-label="จำนวนเต็มของตัวเลขที่ 1">
+            <div class="fiFrac">
+              <input type="number" class="fiBox fiNum" min="0" inputmode="numeric" placeholder="เศษ" aria-label="ตัวเศษของตัวเลขที่ 1">
+              <div class="fiBar"></div>
+              <input type="number" class="fiBox fiDen" min="1" inputmode="numeric" placeholder="ส่วน" aria-label="ตัวส่วนของตัวเลขที่ 1">
+            </div>
+          </div>
           <select id="manualOp">
             <option value="add">+</option>
             <option value="sub">−</option>
             <option value="mul">×</option>
             <option value="div">÷</option>
           </select>
-          <input type="text" id="manualB" placeholder="เช่น 4/5" inputmode="text">
+          <div class="fracWidget" id="manualBWidget">
+            <input type="number" class="fiBox fiWhole" min="0" inputmode="numeric" placeholder="0" aria-label="จำนวนเต็มของตัวเลขที่ 2">
+            <div class="fiFrac">
+              <input type="number" class="fiBox fiNum" min="0" inputmode="numeric" placeholder="เศษ" aria-label="ตัวเศษของตัวเลขที่ 2">
+              <div class="fiBar"></div>
+              <input type="number" class="fiBox fiDen" min="1" inputmode="numeric" placeholder="ส่วน" aria-label="ตัวส่วนของตัวเลขที่ 2">
+            </div>
+          </div>
         </div>
         <div class="errBox" id="manualErr" style="margin-top:16px;"></div>
         <button class="btn primary" id="manualBtn" type="button" style="margin-top:18px;">แก้โจทย์</button>
@@ -600,9 +628,16 @@
           <div class="speechBubble" id="answerSpeech">ลองตอบดูสิ เธอทำได้แน่นอน!</div>
         </div>
         <h3>ลองคิดคำตอบเองก่อนดูวิธีทำ</h3>
-        <p class="hint">พิมพ์คำตอบในรูปแบบ 3/4, 1 2/3 หรือ 5 แล้วกดตรวจคำตอบ</p>
+        <p class="hint">ใส่ตัวเลขลงในแต่ละช่อง แล้วกดตรวจคำตอบ</p>
         <div class="answerRow">
-          <input type="text" id="answerInput" placeholder="คำตอบของคุณ" autocomplete="off">
+          <div class="fracWidget" id="answerWidget">
+            <input type="number" class="fiBox fiWhole" min="0" inputmode="numeric" placeholder="0" aria-label="จำนวนเต็มของคำตอบ">
+            <div class="fiFrac">
+              <input type="number" class="fiBox fiNum" min="0" inputmode="numeric" placeholder="เศษ" aria-label="ตัวเศษของคำตอบ">
+              <div class="fiBar"></div>
+              <input type="number" class="fiBox fiDen" min="1" inputmode="numeric" placeholder="ส่วน" aria-label="ตัวส่วนของคำตอบ">
+            </div>
+          </div>
           <button class="btn primary" id="checkAnswerBtn" type="button">ตรวจคำตอบ</button>
         </div>
         <div class="answerFeedback" id="answerFeedback"></div>
@@ -712,22 +747,26 @@
     return { whole, rem: n - whole * d, den: d };
   }
 
-  function parseFracInput(str) {
-    const s = (str || '').trim();
-    if (!s) return { error: 'กรุณากรอกค่า' };
-    let m;
-    if ((m = s.match(/^(\d+)\s+(\d+)\s*\/\s*(\d+)$/))) {
-      const whole = parseInt(m[1], 10), num = parseInt(m[2], 10), den = parseInt(m[3], 10);
-      if (den === 0) return { error: 'ตัวส่วนต้องไม่เป็นศูนย์' };
-      return { n: whole * den + num, d: den };
+  // reads a fraction typed into a .fracWidget's three number boxes (whole / numerator / denominator)
+  function readFracWidget(root) {
+    const wholeStr = root.querySelector('.fiWhole').value.trim();
+    const numStr = root.querySelector('.fiNum').value.trim();
+    const denStr = root.querySelector('.fiDen').value.trim();
+    const isPosInt = (s) => /^\d+$/.test(s);
+    if (!wholeStr && !numStr && !denStr) return { error: 'กรุณากรอกคำตอบ' };
+    if (wholeStr && !numStr && !denStr) {
+      if (!isPosInt(wholeStr)) return { error: 'กรุณากรอกจำนวนเต็มที่ถูกต้อง' };
+      return { n: parseInt(wholeStr, 10), d: 1 };
     }
-    if ((m = s.match(/^(\d+)\s*\/\s*(\d+)$/))) {
-      const num = parseInt(m[1], 10), den = parseInt(m[2], 10);
-      if (den === 0) return { error: 'ตัวส่วนต้องไม่เป็นศูนย์' };
-      return { n: num, d: den };
-    }
-    if ((m = s.match(/^(\d+)$/))) return { n: parseInt(m[1], 10), d: 1 };
-    return { error: 'รูปแบบไม่ถูกต้อง กรุณาใช้ เช่น 3/4 หรือ 2 1/3 หรือ 5' };
+    if (!numStr) return { error: 'กรุณากรอกตัวเศษ' };
+    if (!denStr) return { error: 'กรุณากรอกตัวส่วน' };
+    if (wholeStr && !isPosInt(wholeStr)) return { error: 'จำนวนเต็มต้องเป็นจำนวนเต็มบวก' };
+    if (!isPosInt(numStr)) return { error: 'ตัวเศษต้องเป็นจำนวนเต็มไม่ติดลบ' };
+    if (!isPosInt(denStr) || parseInt(denStr, 10) === 0) return { error: 'ตัวส่วนต้องเป็นจำนวนเต็มบวกมากกว่า 0' };
+    const whole = wholeStr ? parseInt(wholeStr, 10) : 0;
+    const num = parseInt(numStr, 10);
+    const den = parseInt(denStr, 10);
+    return { n: whole * den + num, d: den };
   }
 
   function appendMixedConversionStep(steps, f1, f2) {
@@ -876,6 +915,16 @@
     const aCells = a.bars.reduce((s, x) => s + x.segments, 0);
     const bSegments = b.bars.reduce((s, x) => s + x.segments, 0);
     if (a.truncated || b.truncated || aCells * bSegments > 150) return null;
+    // "before": the two fractions on their own, exactly as they'd normally be drawn
+    const intro = '<div class="nestedIntro">' +
+      '<div class="barUnit">' + barModelHTML(n1, d1, 'แถบเริ่มต้น ' + n1 + ' ใน ' + d1) + '<span class="barLabel">' + fracSpan(n1, d1) + '</span></div>' +
+      '<span class="nestedIntroTimes">×</span>' +
+      '<div class="barUnit">' + barModelHTML(n2, d2, 'แถบเริ่มต้น ' + n2 + ' ใน ' + d2, true) + '<span class="barLabel">' + fracSpan(n2, d2) + '</span></div>' +
+    '</div>' +
+    '<div class="nestedIntroArrow" aria-hidden="true">↓ แบ่งแต่ละช่องด้วยเศษส่วนแรก ↓</div>';
+    // "after": B's bar with every one of its own segments replaced by a subdivided copy of A's
+    // pattern, revealed one at a time — the "cut down to this" result the intro leads into.
+    const INTRO_DELAY = 420;
     let delayIdx = 0;
     const rows = b.bars.map(function (bBar) {
       let groups = '';
@@ -887,12 +936,12 @@
             cells += '<div class="nestedCell' + (isActive && c < aBar.filled ? ' on' : '') + '"></div>';
           }
         });
-        groups += '<div class="nestedGroup' + (isActive ? '' : ' inactive') + '" style="--delay:' + (delayIdx * 60) + 'ms">' + cells + '</div>';
+        groups += '<div class="nestedGroup' + (isActive ? '' : ' inactive') + '" style="--delay:' + (INTRO_DELAY + delayIdx * 60) + 'ms">' + cells + '</div>';
         delayIdx++;
       }
       return '<div class="nestedBar">' + groups + '</div>';
     }).join('');
-    return '<div class="nestedStack" role="img" aria-label="' + escAttr(label) + '">' + rows + '</div>';
+    return '<div class="nestedStack" role="img" aria-label="' + escAttr(label) + '">' + intro + rows + '</div>';
   }
 
   function multiplyVisualHTML(n1, d1, n2, d2, prodN, prodD) {
@@ -1241,9 +1290,9 @@
 
   $('manualBtn').addEventListener('click', () => {
     showManualErr('');
-    const a = parseFracInput($('manualA').value);
+    const a = readFracWidget($('manualAWidget'));
     if (a.error) { showManualErr('ตัวเลขที่ 1: ' + a.error); return; }
-    const b = parseFracInput($('manualB').value);
+    const b = readFracWidget($('manualBWidget'));
     if (b.error) { showManualErr('ตัวเลขที่ 2: ' + b.error); return; }
     const op = $('manualOp').value;
     const built = buildStepsFor(op, a, b);
@@ -1407,12 +1456,15 @@
   function showAnswerStage() {
     $('stepsWrap').style.display = 'none';
     $('answerWrap').style.display = '';
-    $('answerInput').value = '';
+    const widget = $('answerWidget');
+    widget.querySelector('.fiWhole').value = '';
+    widget.querySelector('.fiNum').value = '';
+    widget.querySelector('.fiDen').value = '';
     $('answerFeedback').className = 'answerFeedback';
     $('answerFeedback').innerHTML = '';
     $('answerActions').innerHTML = '<button class="btn ghost" id="skipToStepsBtn" type="button">ข้ามไปดูวิธีทำ →</button>';
     sayBubble($('answerSpeech'), pickRandom(MASCOT_OPENERS));
-    $('answerInput').focus();
+    widget.querySelector('.fiNum').focus();
   }
 
   function goToSteps() {
@@ -1423,7 +1475,7 @@
   }
 
   function checkAnswer() {
-    const parsed = parseFracInput($('answerInput').value);
+    const parsed = readFracWidget($('answerWidget'));
     const fb = $('answerFeedback');
     if (parsed.error) {
       fb.className = 'answerFeedback incorrect show';
@@ -1524,7 +1576,7 @@
   document.addEventListener('keydown', (e) => {
     const tag = e.target && e.target.tagName;
     if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') {
-      if (e.key === 'Enter' && e.target.id === 'answerInput') { e.preventDefault(); checkAnswer(); }
+      if (e.key === 'Enter' && e.target.closest('#answerWidget')) { e.preventDefault(); checkAnswer(); }
       return;
     }
     if (!screens.solver.classList.contains('active')) return;
