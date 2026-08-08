@@ -206,6 +206,38 @@
   .summaryRow .status.pending{ color:var(--ink-soft); }
   .summaryActions{ display:flex; gap:10px; flex-wrap:wrap; }
 
+  /* lesson tab */
+  .lessonPrimer{ margin-bottom:22px; }
+  .lessonPrimer h3{ font-size:15px; margin-bottom:14px; }
+  .primerList{ margin:0; display:grid; gap:14px; }
+  .primerList dt{ font-size:13.5px; font-weight:700; color:var(--accent-ink); margin-bottom:3px; }
+  .primerList dd{ margin:0; font-size:13.8px; color:var(--ink-soft); line-height:1.65; }
+  .lessonGrid{ display:grid; gap:12px; }
+  .lessonCard{ background:var(--paper-raised); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; }
+  .lessonCard summary{ list-style:none; cursor:pointer; padding:18px 22px; display:flex; align-items:center; gap:14px; font-weight:700; font-size:15.5px; }
+  .lessonCard summary::-webkit-details-marker{ display:none; }
+  .lessonCard summary .opBadge{ width:34px; height:34px; border-radius:9px; background:var(--accent-soft); color:var(--accent-ink); display:flex; align-items:center; justify-content:center; font-size:17px; flex:0 0 auto; }
+  .lessonCard summary .lessonTeaser{ font-weight:400; font-size:12.5px; color:var(--ink-soft); flex:1; }
+  .lessonCard summary .chev{ color:var(--ink-soft); transition:transform .15s ease; flex:0 0 auto; }
+  .lessonCard[open] summary .chev{ transform:rotate(90deg); }
+  .lessonBody{ padding:0 22px 24px; }
+  .lessonRule{ background:var(--accent-soft); color:var(--accent-ink); border-radius:10px; padding:13px 16px; font-size:13.8px; margin-bottom:14px; }
+  .lessonRule b{ display:block; font-size:11px; letter-spacing:.6px; text-transform:uppercase; margin-bottom:3px; }
+  .lessonWarn{ background:var(--warm-soft); color:var(--warm); border-radius:10px; padding:13px 16px; font-size:13.4px; margin-top:16px; }
+  .lessonWarn b{ display:block; font-size:11px; letter-spacing:.6px; text-transform:uppercase; margin-bottom:3px; }
+  .lessonExampleLabel{ font-size:11.5px; font-weight:700; letter-spacing:.6px; text-transform:uppercase; color:var(--ink-soft); margin:18px 0 10px; }
+  .lessonStep{ display:grid; grid-template-columns:auto 1fr auto; gap:16px; align-items:center; padding:14px 0; border-top:1px solid var(--line); }
+  @media (max-width:640px){ .lessonStep{ grid-template-columns:1fr; } }
+  .lessonStep .lsNum{ width:24px; height:24px; border-radius:50%; background:var(--paper); border:1.5px solid var(--line-strong); display:flex; align-items:center; justify-content:center; font-size:11.5px; font-weight:700; color:var(--ink-soft); }
+  .lessonStep .lsBody h4{ font-size:13.8px; margin-bottom:3px; }
+  .lessonStep .lsBody p{ font-size:12.6px; color:var(--ink-soft); margin-bottom:8px; }
+  .lessonStep .lsBody .math{ font-size:17px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .lessonStep .lsBody .math .op, .lessonStep .lsBody .math .arrow{ color:var(--ink-soft); font-size:14px; }
+  .lessonStep .lsVisual{ display:flex; align-items:center; justify-content:center; }
+  .lessonStep .lsVisual figure{ margin:0; display:flex; flex-direction:column; align-items:center; gap:6px; }
+  .lessonStep .lsVisual figcaption{ display:none; }
+  .lessonFooter{ margin-top:18px; }
+
   /* print worksheet */
   #printSheet{ display:none; }
 
@@ -241,11 +273,12 @@
   <section class="screen active" id="screen-setup">
     <span class="eyebrow">ตั้งค่าโจทย์</span>
     <h1>มาฝึกเศษส่วนกัน</h1>
-    <p class="lede">สุ่มโจทย์ตามพารามิเตอร์ที่กำหนด หรือพิมพ์โจทย์ของคุณเองเพื่อดูวิธีทำทีละขั้นตอน</p>
+    <p class="lede">สุ่มโจทย์ตามพารามิเตอร์ที่กำหนด พิมพ์โจทย์ของคุณเอง หรืออ่านบทเรียนอธิบายกฎแต่ละแบบก่อนเริ่มฝึก</p>
 
     <div class="tabs" role="tablist">
       <button class="tabBtn active" id="tab-auto" role="tab" aria-selected="true" aria-controls="panel-auto">สุ่มโจทย์อัตโนมัติ</button>
       <button class="tabBtn" id="tab-manual" role="tab" aria-selected="false" aria-controls="panel-manual">พิมพ์โจทย์เอง</button>
+      <button class="tabBtn" id="tab-lesson" role="tab" aria-selected="false" aria-controls="panel-lesson">บทเรียน</button>
     </div>
 
     <div class="tabPanel active" id="panel-auto" role="tabpanel">
@@ -321,6 +354,26 @@
         <div class="errBox" id="manualErr" style="margin-top:16px;"></div>
         <button class="btn primary" id="manualBtn" type="button" style="margin-top:18px;">แก้โจทย์</button>
       </div>
+    </div>
+
+    <div class="tabPanel" id="panel-lesson" role="tabpanel">
+      <div class="card lessonPrimer">
+        <h3>พื้นฐานที่ควรรู้ก่อน</h3>
+        <dl class="primerList">
+          <dt>เศษส่วนคืออะไร</dt>
+          <dd><b>ตัวเศษ</b> (เลขบน) บอกว่ามีกี่ส่วนที่เราสนใจ ส่วน <b>ตัวส่วน</b> (เลขล่าง) บอกว่าทั้งหมดถูกแบ่งเป็นกี่ส่วนเท่า ๆ กัน เช่น <span class="frac"><span class="num">3</span><span class="bar"></span><span class="den">5</span></span> หมายถึงแบ่งเป็น 5 ส่วนเท่ากัน แล้วเอามา 3 ส่วน
+            <div id="primerBar" style="margin-top:10px;"></div>
+          </dd>
+          <dt>ห.ร.ม. และ ค.ร.น.</dt>
+          <dd><b>ห.ร.ม.</b> (ตัวหารร่วมมาก) คือเลขที่มากที่สุดที่หารทั้งสองจำนวนลงตัว ใช้ตอน<b>ลดรูป</b>เศษส่วน ส่วน <b>ค.ร.น.</b> (ตัวคูณร่วมน้อย) คือเลขที่น้อยที่สุดที่ทั้งสองจำนวนหารลงตัว ใช้ตอนบวก/ลบเศษส่วนที่ตัวส่วนไม่เท่ากัน</dd>
+          <dt>การลดรูปเศษส่วน</dt>
+          <dd>หารทั้งตัวเศษและตัวส่วนด้วย ห.ร.ม. ของมัน จะได้เศษส่วนที่มีค่าเท่าเดิมแต่ตัวเลขเล็กที่สุด เช่น 42/56 มี ห.ร.ม. เท่ากับ 14 จึงลดรูปเหลือ 3/4</dd>
+          <dt>จำนวนผสม ↔ เศษเกิน</dt>
+          <dd>จำนวนผสมคือจำนวนเต็มบวกเศษส่วน เช่น 2¾ แปลงเป็นเศษเกินได้โดยคูณจำนวนเต็มกับตัวส่วนแล้วบวกตัวเศษ (2×4+3=11 จึงได้ 11/4) และย้อนกลับได้ด้วยการหารตัวเศษด้วยตัวส่วน</dd>
+        </dl>
+      </div>
+
+      <div class="lessonGrid" id="lessonGrid"></div>
     </div>
   </section>
 
@@ -795,15 +848,87 @@
   });
 
   // tabs
+  const TAB_NAMES = ['auto', 'manual', 'lesson'];
   $('tab-auto').addEventListener('click', () => switchTab('auto'));
   $('tab-manual').addEventListener('click', () => switchTab('manual'));
+  $('tab-lesson').addEventListener('click', () => switchTab('lesson'));
   function switchTab(name) {
-    $('tab-auto').classList.toggle('active', name === 'auto');
-    $('tab-manual').classList.toggle('active', name === 'manual');
-    $('tab-auto').setAttribute('aria-selected', name === 'auto');
-    $('tab-manual').setAttribute('aria-selected', name === 'manual');
-    $('panel-auto').classList.toggle('active', name === 'auto');
-    $('panel-manual').classList.toggle('active', name === 'manual');
+    TAB_NAMES.forEach((n) => {
+      $('tab-' + n).classList.toggle('active', n === name);
+      $('tab-' + n).setAttribute('aria-selected', n === name);
+      $('panel-' + n).classList.toggle('active', n === name);
+    });
+  }
+
+  /* ---- lesson tab: built from the same step engine used in practice mode ---- */
+  const LESSON_DATA = [
+    {
+      op: 'add', icon: '+', title: 'การบวกเศษส่วน', practiceLabel: 'บวกเศษส่วน',
+      teaser: 'เมื่อตัวส่วนไม่เท่ากัน ต้องหา ค.ร.น. ก่อนบวก',
+      rule: 'ถ้าตัวส่วนเท่ากันอยู่แล้ว บวกตัวเศษกันได้ทันที แต่ถ้าตัวส่วนไม่เท่ากัน ต้องแปลงเศษส่วนทั้งสองให้มีตัวส่วนเท่ากับ ค.ร.น. ก่อน แล้วจึงบวกตัวเศษ โดยตัวส่วนคงเดิม',
+      warn: 'ห้ามนำตัวส่วนมาบวกกันตรง ๆ เช่น 1/2 + 1/3 ไม่เท่ากับ 2/5 — ต้องหา ค.ร.น. ของ 2 และ 3 (คือ 6) แล้วแปลงเป็น 3/6 + 2/6 ก่อนจึงบวกได้',
+      example: { f1: { n: 1, d: 4 }, f2: { n: 1, d: 6 } }
+    },
+    {
+      op: 'sub', icon: '−', title: 'การลบเศษส่วน', practiceLabel: 'ลบเศษส่วน',
+      teaser: 'ทำเหมือนการบวก แต่ลบตัวเศษแทน',
+      rule: 'หา ค.ร.น. ของตัวส่วนทั้งสอง แปลงเศษส่วนให้มีตัวส่วนเท่ากับ ค.ร.น. แล้วนำตัวเศษมาลบกัน โดยตัวส่วนคงเดิม',
+      warn: 'แอปนี้รองรับเฉพาะผลลัพธ์ที่เป็นจำนวนบวก จึงต้องนำจำนวนที่มีค่ามากกว่าตั้งลบก่อนเสมอ',
+      example: { f1: { n: 5, d: 6 }, f2: { n: 1, d: 4 } }
+    },
+    {
+      op: 'mul', icon: '×', title: 'การคูณเศษส่วน', practiceLabel: 'คูณเศษส่วน',
+      teaser: 'คูณเศษกับเศษ ส่วนกับส่วน ไม่ต้องหา ค.ร.น.',
+      rule: 'คูณตัวเศษกับตัวเศษ และคูณตัวส่วนกับตัวส่วน แล้วลดรูปผลลัพธ์ ไม่จำเป็นต้องทำให้ตัวส่วนเท่ากันก่อนเหมือนการบวกลบ',
+      warn: 'ข้อผิดพลาดที่พบบ่อยคือไปหา ค.ร.น. ก่อนคูณ ซึ่งไม่จำเป็นและเสียเวลาโดยใช่เหตุ',
+      example: { f1: { n: 2, d: 3 }, f2: { n: 3, d: 4 } }
+    },
+    {
+      op: 'div', icon: '÷', title: 'การหารเศษส่วน', practiceLabel: 'หารเศษส่วน',
+      teaser: 'กลับเศษส่วนตัวหลัง แล้วเปลี่ยนเป็นการคูณ',
+      rule: 'การหารเศษส่วนเท่ากับการคูณด้วยส่วนกลับของตัวหาร จำง่าย ๆ ว่า "เก็บตัวแรก เปลี่ยนเป็นคูณ กลับตัวหลัง" แล้วคูณตามปกติ',
+      warn: 'ต้องกลับเฉพาะเศษส่วนตัวที่สอง (ตัวหาร) เท่านั้น ห้ามกลับตัวตั้ง',
+      example: { f1: { n: 3, d: 4 }, f2: { n: 2, d: 5 } }
+    }
+  ];
+
+  function lessonStepHTML(index, view) {
+    return '<div class="lessonStep">' +
+      '<div class="lsNum">' + (index + 1) + '</div>' +
+      '<div class="lsBody"><h4>' + view.title + '</h4><p>' + view.desc + '</p><div class="math">' + view.math + '</div></div>' +
+      '<div class="lsVisual">' + view.visual + '</div>' +
+    '</div>';
+  }
+
+  function renderLessonExamples() {
+    const grid = $('lessonGrid');
+    grid.innerHTML = '';
+    LESSON_DATA.forEach((lesson, i) => {
+      const built = buildStepsFor(lesson.op, lesson.example.f1, lesson.example.f2);
+      const stepsHTML = built.steps.map((s, idx) => lessonStepHTML(idx, renderStep(s))).join('');
+      const exprText = exprHTML(lesson.example.f1, lesson.op, lesson.example.f2) + ' <span class="op">=</span> ' + mixedDisplay(built.result.n, built.result.d);
+      const details = document.createElement('details');
+      details.className = 'lessonCard';
+      if (i === 0) details.open = true;
+      details.innerHTML =
+        '<summary><span class="opBadge">' + lesson.icon + '</span><span>' + lesson.title + '</span><span class="lessonTeaser">' + lesson.teaser + '</span><span class="chev">›</span></summary>' +
+        '<div class="lessonBody">' +
+          '<div class="lessonRule"><b>กฎสำคัญ</b>' + lesson.rule + '</div>' +
+          '<div class="lessonExampleLabel">ตัวอย่าง: ' + exprText + '</div>' +
+          stepsHTML +
+          '<div class="lessonWarn"><b>ข้อควรระวัง</b>' + lesson.warn + '</div>' +
+          '<div class="lessonFooter"><button class="btn primary" type="button" data-practice-op="' + lesson.op + '">ลองฝึก' + lesson.practiceLabel + 'เลย →</button></div>' +
+        '</div>';
+      grid.appendChild(details);
+    });
+    grid.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-practice-op]');
+      if (!btn) return;
+      const op = btn.dataset.practiceOp;
+      document.querySelectorAll('input[name=op]').forEach((el) => { el.checked = el.value === op; });
+      switchTab('auto');
+      window.scrollTo(0, 0);
+    });
   }
 
   let problems = [];
@@ -1130,6 +1255,8 @@
   /* ---- init ---- */
   loadConfig();
   loadTheme();
+  renderLessonExamples();
+  $('primerBar').innerHTML = barModelHTML(3, 5, 'แถบแบ่งส่วน เติมสี 3 ใน 5 ส่วน');
 
 })();
 </script>
