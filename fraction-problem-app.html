@@ -355,11 +355,17 @@
   .scoreBar{ display:flex; align-items:center; gap:22px; background:var(--paper-raised); border:2px solid var(--line); border-radius:16px; padding:14px 20px; margin-bottom:20px; flex-wrap:wrap; box-shadow:var(--shadow); }
   .scoreBar .scoreStat{ font-size:12.5px; color:var(--ink-soft); white-space:nowrap; font-weight:700; }
   .scoreBar .scoreStat b{ color:var(--ink); font-size:18px; display:block; font-variant-numeric:tabular-nums; }
-  .streakStat{ background:var(--warm-soft); border-radius:12px; padding:6px 12px; }
+  .streakStat{ background:var(--warm-soft); border-radius:12px; padding:6px 12px; display:flex; align-items:center; gap:7px; }
   .streakStat b{ color:var(--warm); }
+  .sparkBuddy{ flex:0 0 auto; filter:drop-shadow(0 0 3px color-mix(in srgb, var(--warm) 65%, transparent)); }
   .streakStat.hot{ background:linear-gradient(135deg, var(--warm-soft), color-mix(in srgb, var(--warm) 30%, var(--warm-soft))); }
-  @media (prefers-reduced-motion: no-preference){ .streakStat.hot b{ animation:streakPulse 1s ease-in-out infinite; } }
+  .streakStat.hot .sparkBuddy{ filter:drop-shadow(0 0 6px color-mix(in srgb, var(--warm) 85%, transparent)); }
+  @media (prefers-reduced-motion: no-preference){
+    .streakStat.hot b{ animation:streakPulse 1s ease-in-out infinite; }
+    .streakStat.hot .sparkBuddy{ animation:sparkBob .6s ease-in-out infinite; }
+  }
   @keyframes streakPulse{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.12); } }
+  @keyframes sparkBob{ 0%,100%{ transform:translateY(0) rotate(-4deg); } 50%{ transform:translateY(-2px) rotate(4deg); } }
   .progressTrack{ height:8px; border-radius:6px; background:var(--line); overflow:hidden; flex:1 1 140px; min-width:100px; }
   .progressTrack i{ display:block; height:100%; background:linear-gradient(90deg,var(--accent),var(--op-sub)); border-radius:6px; transition:width .4s cubic-bezier(.34,1.2,.64,1); }
   .probCard .resultBadge{ font-size:11px; font-weight:800; padding:4px 10px; border-radius:20px; white-space:nowrap; }
@@ -376,10 +382,12 @@
   .scoreCircle span{ font-size:10.5px; color:var(--ink-soft); font-weight:700; }
   .medalCard{ display:flex; align-items:center; gap:16px; background:var(--paper-raised); border:2px solid var(--line); border-radius:16px; padding:16px 20px; margin-bottom:22px; box-shadow:var(--shadow); }
   .medalIcon{ flex:0 0 auto; width:56px; height:56px; }
-  .medalIcon.gold{ color:#e8a716; }
-  .medalIcon.silver{ color:#9aa4b2; }
-  .medalIcon.bronze{ color:#b6713d; }
-  .medalIcon.try{ color:var(--accent); }
+  .medalIcon.gold{ color:#e8a716; filter:drop-shadow(0 0 9px rgba(232,167,22,.65)); }
+  .medalIcon.silver{ color:#9aa4b2; filter:drop-shadow(0 0 8px rgba(154,164,178,.55)); }
+  .medalIcon.bronze{ color:#b6713d; filter:drop-shadow(0 0 8px rgba(182,113,61,.55)); }
+  .medalIcon.try{ color:var(--accent); filter:drop-shadow(0 0 7px color-mix(in srgb, var(--accent) 55%, transparent)); }
+  @media (prefers-reduced-motion: no-preference){ .medalIcon{ animation:medalGlow 1.8s ease-in-out infinite; } }
+  @keyframes medalGlow{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.06); } }
   .medalText{ display:flex; flex-direction:column; gap:2px; }
   .medalText b{ font-size:16px; color:var(--ink); }
   .medalText span{ font-size:13px; color:var(--ink-soft); }
@@ -476,6 +484,13 @@
   /* mascot as teaching companion, with a speech bubble */
   .mascotTeach{ display:flex; align-items:center; gap:14px; margin-bottom:18px; }
   .mascotTeach .mascotHero{ width:66px; height:66px; }
+  .mascotThink{ transform:rotate(-6deg); }
+  @media (prefers-reduced-motion: no-preference){
+    .mascotThink{ animation:mascotThinkBob 3.2s ease-in-out infinite; }
+    @keyframes mascotThinkBob{ 0%,100%{ transform:translateY(0) rotate(-6deg); } 50%{ transform:translateY(-4px) rotate(-9deg); } }
+    .thinkDot{ animation:thinkDotPulse 1.4s ease-in-out infinite; transform-origin:center; transform-box:fill-box; }
+    @keyframes thinkDotPulse{ 0%,100%{ opacity:.45; transform:scale(.85); } 50%{ opacity:1; transform:scale(1.1); } }
+  }
   .speechBubble{ position:relative; background:var(--paper-raised); border:2px solid var(--line-strong); border-radius:16px; padding:12px 18px; font-size:13.8px; font-weight:700; color:var(--ink); box-shadow:var(--shadow); flex:1 1 auto; }
   .speechBubble::before{ content:""; position:absolute; left:-9px; bottom:18px; width:15px; height:15px; background:var(--paper-raised); border-left:2px solid var(--line-strong); border-bottom:2px solid var(--line-strong); transform:rotate(45deg); border-radius:0 0 0 3px; }
   @media (prefers-reduced-motion: no-preference){
@@ -713,7 +728,16 @@
     <div class="scoreBar">
       <div class="scoreStat"><b id="scoreAttempted">0 / 0</b>ข้อที่ลองตอบ</div>
       <div class="scoreStat"><b id="scoreCorrect">0</b>ตอบถูก</div>
-      <div class="scoreStat streakStat" id="streakStat" style="display:none;"><b id="scoreStreak">0</b>ถูกติดกัน 🔥</div>
+      <div class="scoreStat streakStat" id="streakStat" style="display:none;">
+        <svg class="sparkBuddy" viewBox="0 0 24 26" width="20" height="21" aria-hidden="true">
+          <path d="M12 2 C8 6.5 5.5 10.5 5.5 14.5 A6.5 6.5 0 0 0 18.5 14.5 C18.5 10.8 16.7 8.6 15.5 6.6 C15.3 9.5 13.4 10.3 12.6 8.6 C11.9 7 12.4 4.3 12 2 Z" fill="var(--warm)"/>
+          <circle cx="9.6" cy="15.4" r="1.15" fill="#1a2436"/>
+          <circle cx="14.4" cy="15.4" r="1.15" fill="#1a2436"/>
+          <circle cx="9.2" cy="15" r=".35" fill="#fff"/>
+          <circle cx="14" cy="15" r=".35" fill="#fff"/>
+          <path d="M10.1 18 Q12 19.6 13.9 18" stroke="#1a2436" stroke-width="1.1" stroke-linecap="round" fill="none"/>
+        </svg>
+        <b id="scoreStreak">0</b>ถูกติดกัน</div>
       <div class="progressTrack"><i id="scoreProgress" style="width:0%"></i></div>
       <button class="btn" id="viewSummaryBtn" type="button">สรุปผล</button>
     </div>
@@ -741,19 +765,22 @@
     <div id="answerWrap">
       <div class="card answerCard">
         <div class="mascotTeach">
-          <svg class="mascotHero" viewBox="0 0 100 100" role="img" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+          <svg class="mascotHero mascotThink" viewBox="0 0 100 100" role="img" aria-label="น้องเศษกำลังคิด" xmlns="http://www.w3.org/2000/svg">
             <circle cx="50" cy="54" r="38" fill="var(--accent)"/>
             <circle cx="14" cy="58" r="8" fill="var(--accent)"/>
             <circle cx="86" cy="58" r="8" fill="var(--accent)"/>
-            <circle cx="34" cy="50" r="10" fill="#fff"/>
+            <circle cx="34" cy="47" r="10" fill="#fff"/>
             <circle cx="66" cy="50" r="10" fill="#fff"/>
-            <circle cx="36" cy="51" r="4.6" fill="#1a2436"/>
+            <circle cx="35.5" cy="45" r="4.6" fill="#1a2436"/>
             <circle cx="68" cy="51" r="4.6" fill="#1a2436"/>
-            <circle cx="34.5" cy="48.5" r="1.5" fill="#fff"/>
+            <circle cx="34" cy="42.5" r="1.5" fill="#fff"/>
             <circle cx="66.5" cy="48.5" r="1.5" fill="#fff"/>
             <ellipse cx="24" cy="64" rx="6.5" ry="3.6" fill="#fff" opacity=".4"/>
             <ellipse cx="76" cy="64" rx="6.5" ry="3.6" fill="#fff" opacity=".4"/>
-            <path d="M36 68 Q50 80 64 68" stroke="#1a2436" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+            <path d="M38 70 Q50 76 62 68" stroke="#1a2436" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+            <circle class="thinkDot" cx="80" cy="20" r="2.6" fill="var(--warm)" opacity=".5"/>
+            <circle class="thinkDot" cx="86" cy="11" r="3.6" fill="var(--warm)" opacity=".7" style="animation-delay:.2s"/>
+            <circle class="thinkDot" cx="93" cy="0" r="5.2" fill="var(--warm)" opacity=".9" style="animation-delay:.4s"/>
           </svg>
           <div class="speechBubble" id="answerSpeech">ลองตอบดูสิ เธอทำได้แน่นอน!</div>
         </div>
