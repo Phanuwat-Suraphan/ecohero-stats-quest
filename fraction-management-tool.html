@@ -109,7 +109,7 @@
 
                     <!-- เศษส่วนที่ 2 -->
                     <div class="bg-indigo-50/50 p-5 rounded-2xl border-2 border-indigo-100 flex items-center gap-4 w-full lg:w-auto justify-center shadow-sm relative">
-                        <span class="absolute -top-3 bg-indigo-100 text-indigo-700 text-xs font-bold px-2 py-1 rounded-md">ตัวทำปฏิกิริยา</span>
+                        <span class="absolute -top-3 bg-indigo-100 text-indigo-700 text-xs font-bold px-2 py-1 rounded-md">ตัวดำเนินการที่ 2</span>
                         <input type="number" id="c_w2" class="w-20 h-20 text-center text-3xl font-bold rounded-xl border-2 border-slate-200 shadow-inner focus:border-indigo-500 outline-none" placeholder="เต็ม" min="0">
                         <div class="flex flex-col gap-2 w-20">
                             <input type="number" id="c_n2" class="h-12 text-center text-2xl font-bold rounded-lg border-2 border-slate-200 shadow-inner focus:border-indigo-500 outline-none" placeholder="เศษ" min="0" value="1">
@@ -503,9 +503,9 @@
             let i1 = {w:0, n: num1, d: d1, isNegative: false};
             let i2 = {w:0, n: num2, d: d2, isNegative: false};
 
-            // Step 1: ถ้าเป็นจำนวนคละ ให้แปลงเป็นเศษเกินก่อน
+            // Step 1: ถ้ามีจำนวนเต็มติดอยู่ (จำนวนนับ หรือ จำนวนคละ) ให้แปลงเป็นเศษเกินก่อน
             if (w1 > 0 || w2 > 0) {
-                steps.push(buildStepDOM("แปลงจำนวนคละเป็นเศษเกิน", i1, op, i2, null, shape, "📦 เหมือนเรามีเค้กเต็มถาด (จำนวนเต็ม) แกะใส่รวมกับเศษที่เหลือ เพื่อให้คำนวณง่ายขึ้น"));
+                steps.push(buildStepDOM("แปลงจำนวนเต็ม/จำนวนคละ ให้เป็นเศษเกิน", i1, op, i2, null, shape, "📦 เหมือนเรามีเค้กเต็มถาด (จำนวนเต็ม) แกะใส่รวมกับเศษที่เหลือ (ถ้ามี) เพื่อให้ทุกจำนวนอยู่ในรูปเศษส่วนแบบเดียวกัน คำนวณง่ายขึ้น"));
             }
 
             let resN, resD;
@@ -517,7 +517,7 @@
 
                 // Step 2: ทำส่วนให้เท่ากัน (จุดที่ Bar จะถูกซอยย่อยลง)
                 if (d1 !== d2) {
-                    steps.push(buildStepDOM(`ทำตัวส่วนให้เท่ากัน (หา ค.ร.น. ของ ${d1} และ ${d2} คือ ${commonD})`, eq1, op, eq2, null, shape, `🍕 เปรียบเสมือนพิซซ่าถาดซ้ายแบ่งไว้ ${d1} ส่วน ส่วนถาดขวาแบ่งไว้ ${d2} ส่วน ขนาดชิ้นไม่เท่ากันเอามาบวกกันตรงๆ ไม่ได้! เราจึงต้องเอาแต่ละชิ้นมา **"ตัดแบ่งขีดเส้นเพิ่ม"** ให้กลายเป็น ${commonD} ส่วนเท่าๆ กันทั้งสองถาด`));
+                    steps.push(buildStepDOM(`ทำตัวส่วนให้เท่ากัน (หา ค.ร.น. ของ ${d1} และ ${d2} คือ ${commonD})`, eq1, op, eq2, null, shape, `🍕 เปรียบเสมือนพิซซ่าถาดซ้ายแบ่งไว้ ${d1} ส่วน ส่วนถาดขวาแบ่งไว้ ${d2} ส่วน ขนาดชิ้นไม่เท่ากันเอามาบวกกันตรงๆ ไม่ได้! เราจึงต้องเอาแต่ละชิ้นมา <strong>"ตัดแบ่งขีดเส้นเพิ่ม"</strong> ให้กลายเป็น ${commonD} ส่วนเท่าๆ กันทั้งสองถาด`));
                 }
 
                 resD = commonD;
@@ -533,11 +533,11 @@
             else if (op === '*') {
                 resN = num1 * num2;
                 resD = d1 * d2;
-                steps.push(buildStepDOM("นำตัวเศษคูณเศษ และ ตัวส่วนคูณส่วน", i1, op, i2, {w:0, n:resN, d:resD, isNegative: false}, shape, "🔲 เปรียบเสมือนการซ้อนทับพื้นที่ตาราง กว้าง × ยาว เพื่อดูสัดส่วนพื้นที่ที่ทับซ้อนกันทั้งหมด"));
+                steps.push(buildStepDOM("นำตัวเศษคูณเศษ และ ตัวส่วนคูณส่วน", i1, op, i2, {w:0, n:resN, d:resD, isNegative: false}, shape, "🔲 การคูณเศษส่วน คือการหา \"ส่วนหนึ่งของอีกส่วนหนึ่ง\" ให้นำตัวเศษคูณกับตัวเศษ และตัวส่วนคูณกับตัวส่วน จะได้เศษส่วนผลลัพธ์ใหม่"));
             }
             else if (op === '/') {
                 let flipped2 = {w:0, n: d2, d: num2, isNegative: false};
-                steps.push(buildStepDOM("เปลี่ยนหารเป็นคูณ และกลับเศษเป็นส่วน", i1, '*', flipped2, null, shape, "🔄 สลับเศษเป็นส่วนของตัวหาร เพื่อแปลงการหารให้เป็นการจัดกลุ่มคูณทวนกลับ"));
+                steps.push(buildStepDOM("เปลี่ยนหารเป็นคูณ และกลับเศษเป็นส่วน", i1, '*', flipped2, null, shape, "🔄 การหารด้วยเศษส่วน เท่ากับการคูณด้วย \"เศษส่วนกลับ\" (สลับตัวเศษกับตัวส่วนของตัวหาร) จึงเปลี่ยนเครื่องหมายหารให้เป็นคูณได้เลย"));
 
                 resN = num1 * d2;
                 resD = d1 * num2;
